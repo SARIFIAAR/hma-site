@@ -254,9 +254,11 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: var(--display-weight
 @media (max-width: 680px) { .programme { grid-template-columns: 1fr; } }
 
 /* ---- About ---- */
-.about { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(1.5rem, 5vw, 4rem); align-items: start; }
+.about { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(1.5rem, 5vw, 4rem); align-items: start; }
+.about > * { min-width: 0; }
 .about__portrait {
-  display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover;
+  display: block; width: 100%; max-width: 420px; height: auto;
+  aspect-ratio: 3 / 4; object-fit: cover;
   border: 1px solid var(--line); border-radius: 2px;
 }
 @media (max-width: 760px) { .about { grid-template-columns: 1fr; } .about__portrait { max-width: 320px; } }
