@@ -256,12 +256,9 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: var(--display-weight
 /* ---- About ---- */
 .about { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(1.5rem, 5vw, 4rem); align-items: start; }
 .about__portrait {
-  aspect-ratio: 3 / 4; border: 1px solid var(--line); border-radius: 2px;
-  background:
-    linear-gradient(145deg, color-mix(in oklab, var(--accent) 16%, var(--surface)), var(--surface));
-  display: flex; align-items: center; justify-content: center;
+  display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover;
+  border: 1px solid var(--line); border-radius: 2px;
 }
-.about__portrait span { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); }
 @media (max-width: 760px) { .about { grid-template-columns: 1fr; } .about__portrait { max-width: 320px; } }
 
 /* ---- Apply ---- */
