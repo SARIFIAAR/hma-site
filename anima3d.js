@@ -43,7 +43,7 @@
   /* ---- Build the figure ---- */
   function build(MeshSurfaceSampler, BGU, EffectComposer, RenderPass, UnrealBloomPass) {
     renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setClearColor(0x000000, 0);
+    renderer.setClearColor(0x000000, 1); // opaque black; hero bg is matched to black so no seam
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -68,28 +68,29 @@
       parts.push(geo);
     }
     // head
-    var head = new THREE.SphereGeometry(0.34, 18, 16);
-    head.translate(0, 2.72, 0);
+    var head = new THREE.SphereGeometry(0.28, 18, 16);
+    head.scale(0.92, 1.1, 0.92);
+    head.translate(0, 2.74, 0);
     parts.push(head);
-    // neck, torso, hips
-    capsule(0, 2.40, 0, 0, 2.55, 0, 0.12);                 // neck
-    capsule(-0.52, 2.34, 0, 0.52, 2.34, 0, 0.14);          // shoulders
-    capsule(0, 1.55, 0, 0, 2.34, 0, 0.42);                 // torso
-    capsule(0, 1.30, 0, 0, 1.60, 0, 0.40);                 // hips
-    // arms (slightly out)
-    capsule(-0.52, 2.30, 0, -0.66, 1.75, 0.02, 0.135);     // L upper arm
-    capsule(-0.66, 1.75, 0.02, -0.74, 1.20, 0.05, 0.11);   // L forearm
-    capsule(0.52, 2.30, 0, 0.66, 1.75, 0.02, 0.135);       // R upper arm
-    capsule(0.66, 1.75, 0.02, 0.74, 1.20, 0.05, 0.11);     // R forearm
-    var lh = new THREE.SphereGeometry(0.12, 10, 9); lh.translate(-0.76, 1.12, 0.05); parts.push(lh);
-    var rh = new THREE.SphereGeometry(0.12, 10, 9); rh.translate(0.76, 1.12, 0.05); parts.push(rh);
-    // legs
-    capsule(-0.22, 1.45, 0, -0.20, 0.80, 0, 0.18);         // L thigh
-    capsule(-0.20, 0.80, 0, -0.18, 0.12, 0.02, 0.135);     // L shin
-    capsule(0.22, 1.45, 0, 0.20, 0.80, 0, 0.18);           // R thigh
-    capsule(0.20, 0.80, 0, 0.18, 0.12, 0.02, 0.135);       // R shin
-    var lf = new THREE.BoxGeometry(0.2, 0.1, 0.34); lf.translate(-0.18, 0.06, 0.1); parts.push(lf);
-    var rf = new THREE.BoxGeometry(0.2, 0.1, 0.34); rf.translate(0.18, 0.06, 0.1); parts.push(rf);
+    // neck, torso, hips — slimmer, more athletic proportions
+    capsule(0, 2.42, 0, 0, 2.56, 0, 0.085);                // neck
+    capsule(-0.46, 2.36, 0, 0.46, 2.36, 0, 0.10);          // shoulders
+    capsule(0, 1.58, 0, 0, 2.34, 0, 0.30);                 // torso (tapered feel)
+    capsule(0, 1.34, 0, 0, 1.62, 0, 0.27);                 // hips
+    // arms (slightly out, slimmer)
+    capsule(-0.46, 2.32, 0, -0.58, 1.76, 0.02, 0.095);     // L upper arm
+    capsule(-0.58, 1.76, 0.02, -0.66, 1.18, 0.05, 0.078);  // L forearm
+    capsule(0.46, 2.32, 0, 0.58, 1.76, 0.02, 0.095);       // R upper arm
+    capsule(0.58, 1.76, 0.02, 0.66, 1.18, 0.05, 0.078);    // R forearm
+    var lh = new THREE.SphereGeometry(0.085, 10, 9); lh.translate(-0.68, 1.10, 0.05); parts.push(lh);
+    var rh = new THREE.SphereGeometry(0.085, 10, 9); rh.translate(0.68, 1.10, 0.05); parts.push(rh);
+    // legs — longer, slimmer
+    capsule(-0.19, 1.48, 0, -0.18, 0.80, 0, 0.135);        // L thigh
+    capsule(-0.18, 0.80, 0, -0.17, 0.10, 0.02, 0.095);     // L shin
+    capsule(0.19, 1.48, 0, 0.18, 0.80, 0, 0.135);          // R thigh
+    capsule(0.18, 0.80, 0, 0.17, 0.10, 0.02, 0.095);       // R shin
+    var lf = new THREE.BoxGeometry(0.15, 0.08, 0.30); lf.translate(-0.17, 0.05, 0.09); parts.push(lf);
+    var rf = new THREE.BoxGeometry(0.15, 0.08, 0.30); rf.translate(0.17, 0.05, 0.09); parts.push(rf);
 
     var merged = BGU.mergeGeometries(parts.map(function (g) { return g.toNonIndexed(); }), false);
     merged.computeVertexNormals();

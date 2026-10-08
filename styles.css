@@ -188,11 +188,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: var(--display-weight
   }
   [data-theme="anima"] .anima3d.is-ready { opacity: .32; }
 }
-/* Anima recolours the hero wash to a cool blue */
+/* Anima: flat black hero so the opaque WebGL canvas blends with no seam;
+   a faint cool wash sits behind the headline on the left only */
 [data-theme="anima"] .hero {
   background:
-    radial-gradient(55% 55% at 76% 42%, rgba(70,150,255,0.16), transparent 70%),
-    var(--bg);
+    radial-gradient(50% 55% at 28% 38%, rgba(70,140,255,0.10), transparent 70%),
+    #000;
 }
 .hero__title {
   font-size: clamp(3.2rem, 9vw, 7.5rem);
