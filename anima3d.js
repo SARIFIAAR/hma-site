@@ -84,29 +84,29 @@
       model.updateMatrixWorld(true);
     }
 
+    // Use ONLY the main body skin (largest skinned mesh) — skip inner/secondary
+    // geometry (eyes, etc.) so we draw the skin and nothing overlapping inside.
+    var skins = [];
+    model.traverse(function (o) { if (o.isSkinnedMesh) skins.push(o); });
+    skins.sort(function (a, b) { return b.geometry.attributes.position.count - a.geometry.attributes.position.count; });
+    var skin = skins[0];
+    skin.skeleton.update();
+
     var v = new THREE.Vector3();
-    var baked = [];
-    model.traverse(function (o) {
-      if (!o.isSkinnedMesh) return;
-      o.skeleton.update();
-      var g = o.geometry;
-      var pos = g.attributes.position;
-      var arr = new Float32Array(pos.count * 3);
-      for (var i = 0; i < pos.count; i++) {
-        v.fromBufferAttribute(pos, i);
-        o.applyBoneTransform(i, v);     // posed, in mesh-local space
-        v.applyMatrix4(o.matrixWorld);  // -> world space
-        arr[i * 3] = v.x; arr[i * 3 + 1] = v.y; arr[i * 3 + 2] = v.z;
-      }
-      var bg = new THREE.BufferGeometry();
-      bg.setAttribute("position", new THREE.BufferAttribute(arr, 3));
-      if (g.index) bg.setIndex(g.index.clone());
-      baked.push(bg);
-    });
+    var g = skin.geometry;
+    var pos = g.attributes.position;
+    var arr = new Float32Array(pos.count * 3);
+    for (var i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      skin.applyBoneTransform(i, v);       // posed, in mesh-local space
+      v.applyMatrix4(skin.matrixWorld);    // -> world space
+      arr[i * 3] = v.x; arr[i * 3 + 1] = v.y; arr[i * 3 + 2] = v.z;
+    }
+    var bodyGeo = new THREE.BufferGeometry();
+    bodyGeo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+    if (g.index) bodyGeo.setIndex(g.index.clone());
 
     scene.remove(model);
-
-    var bodyGeo = baked.length > 1 ? BGU.mergeGeometries(baked, false) : baked[0];
 
     // centre at origin and normalise height
     bodyGeo.computeBoundingBox();
@@ -122,28 +122,38 @@
   }
 
   function buildVisual(bodyGeo, MeshSurfaceSampler, SimplifyModifier) {
-    // --- low-poly wireframe (simplified for the faceted hologram look) ---
+    // --- invisible depth occluder: writes depth only, so back-of-body points
+    //     are hidden and only the near SKIN surface shows (no x-ray overlap) ---
+    var occ = new THREE.Mesh(bodyGeo, new THREE.MeshBasicMaterial({
+      colorWrite: false, depthWrite: true, depthTest: true,
+      polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1
+    }));
+    occ.renderOrder = 0;
+    group.add(occ);
+
+    // --- low-poly wireframe (the "architecture" of the figure), front-only ---
     try {
       var vCount = bodyGeo.attributes.position.count;
-      var keep = 900;
+      var keep = 850;
       var remove = Math.max(0, vCount - keep);
       var low = new SimplifyModifier().modify(bodyGeo, remove);
       var wire = new THREE.LineSegments(
         new THREE.WireframeGeometry(low),
         new THREE.LineBasicMaterial({
-          color: 0x58a6ff, transparent: true, opacity: 0.16,
-          blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false
+          color: 0xc7a25e, transparent: true, opacity: 0.20,
+          blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true
         })
       );
+      wire.renderOrder = 1;
       group.add(wire);
     } catch (e) {
       if (window.console) console.warn("[HMA] wireframe simplify skipped:", e);
     }
 
-    // --- surface points ---
+    // --- surface points (champagne), front skin only via depthTest ---
     var mesh = new THREE.Mesh(bodyGeo, new THREE.MeshBasicMaterial());
     var sampler = new MeshSurfaceSampler(mesh).build();
-    var N = 16000;
+    var N = 24000;                       // denser: only the front half shows
     var pos = new Float32Array(N * 3);
     var tmp = new THREE.Vector3();
     for (var i = 0; i < N; i++) {
@@ -154,10 +164,11 @@
     pgeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
 
     var pts = new THREE.Points(pgeo, new THREE.PointsMaterial({
-      color: 0x7cbaff, size: 0.028, map: dotTexture(), sizeAttenuation: true,
+      color: 0xe3c488, size: 0.026, map: dotTexture(), sizeAttenuation: true,
       transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending,
-      depthWrite: false, depthTest: false
+      depthWrite: false, depthTest: true
     }));
+    pts.renderOrder = 2;
     group.add(pts);
   }
 
@@ -173,10 +184,10 @@
     var c = document.createElement("canvas"); c.width = c.height = 64;
     var g = c.getContext("2d");
     var rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    rg.addColorStop(0, "rgba(255,255,255,1)");
-    rg.addColorStop(0.25, "rgba(200,228,255,0.95)");
-    rg.addColorStop(0.6, "rgba(96,164,255,0.35)");
-    rg.addColorStop(1, "rgba(64,132,255,0)");
+    rg.addColorStop(0, "rgba(255,250,240,1)");
+    rg.addColorStop(0.25, "rgba(238,214,160,0.95)");
+    rg.addColorStop(0.6, "rgba(199,162,94,0.35)");
+    rg.addColorStop(1, "rgba(180,140,70,0)");
     g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
     var tex = new THREE.Texture(c); tex.needsUpdate = true; return tex;
   }
