@@ -1,161 +1,186 @@
-// The Human Mastery Architecture — "Anima" option (Three.js)
-// A glowing low-poly human: merged-primitive body surface-sampled into additive
-// points + a low-poly wireframe, with an UnrealBloom pass. Three.js is loaded
-// ONLY when Anima is first selected (dynamic import) so the other options stay
-// light. Respects reduced-motion; pauses off-screen / when the tab is hidden.
+// The Human Mastery Architecture — "Anima" option (Three.js + real GLB human)
+// Loads a rigged humanoid (Xbot mannequin), poses it to its idle standing frame,
+// bakes the skinned mesh, then renders it as additive glowing points + a
+// low-poly wireframe through an UnrealBloom pass. Three.js + the model load
+// ONLY when Anima is first selected. Respects reduced-motion; pauses off-screen.
+//
+// Model: "Xbot" — Mixamo (Adobe) mannequin, as shipped with three.js examples.
+// Mixamo assets are royalty-free for use; confirm licensing before production.
 (function () {
   "use strict";
 
+  var MODEL_URL = "models/Xbot.glb";
   var canvas = document.getElementById("anima3d");
   if (!canvas) return;
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   function isAnima() { return document.documentElement.getAttribute("data-theme") === "anima"; }
 
   var booting = false, ready = false, running = false, failed = false;
-  var THREE, renderer, scene, camera, composer, group, points, clock;
+  var THREE, renderer, scene, camera, composer, group, clock;
   var rafId = 0, inView = true;
 
-  /* ---- Lazy boot: pull Three.js only when Anima is actually shown ---- */
   async function boot() {
     if (booting || ready || failed) return;
     booting = true;
     try {
       THREE = await import("three");
-      var sampMod = await import("three/addons/math/MeshSurfaceSampler.js");
-      var bguMod  = await import("three/addons/utils/BufferGeometryUtils.js");
-      var ecMod   = await import("three/addons/postprocessing/EffectComposer.js");
-      var rpMod   = await import("three/addons/postprocessing/RenderPass.js");
-      var bloomMod= await import("three/addons/postprocessing/UnrealBloomPass.js");
-      build(sampMod.MeshSurfaceSampler, bguMod, ecMod.EffectComposer, rpMod.RenderPass, bloomMod.UnrealBloomPass);
+      var GLTF   = await import("three/addons/loaders/GLTFLoader.js");
+      var Samp   = await import("three/addons/math/MeshSurfaceSampler.js");
+      var BGU    = await import("three/addons/utils/BufferGeometryUtils.js");
+      var Simp   = await import("three/addons/modifiers/SimplifyModifier.js");
+      var EC     = await import("three/addons/postprocessing/EffectComposer.js");
+      var RP     = await import("three/addons/postprocessing/RenderPass.js");
+      var Bloom  = await import("three/addons/postprocessing/UnrealBloomPass.js");
+
+      initRenderer();
+      var bodyGeo = await loadAndBake(GLTF.GLTFLoader, BGU);
+      buildVisual(bodyGeo, Samp.MeshSurfaceSampler, Simp.SimplifyModifier);
+      buildComposer(EC.EffectComposer, RP.RenderPass, Bloom.UnrealBloomPass);
+
       ready = true;
       canvas.classList.add("is-ready");
       resize();
       start();
     } catch (e) {
       failed = true;
-      // graceful: leave the hero clean if the CDN/module fails
       if (window.console) console.warn("[HMA] Anima 3D unavailable:", e);
     } finally {
       booting = false;
     }
   }
 
-  /* ---- Build the figure ---- */
-  function build(MeshSurfaceSampler, BGU, EffectComposer, RenderPass, UnrealBloomPass) {
+  function initRenderer() {
     renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setClearColor(0x000000, 1); // opaque black; hero bg is matched to black so no seam
+    renderer.setClearColor(0x000000, 1); // opaque black; hero bg matched to black
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
 
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-    camera.position.set(0, 0.1, 7.6);
+    camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+    camera.position.set(0, 0.0, 6.6);
 
     group = new THREE.Group();
     scene.add(group);
+    clock = new THREE.Clock();
+  }
 
-    // --- assemble body from capsules + a head sphere ---
-    var parts = [];
-    function capsule(x1, y1, z1, x2, y2, z2, r) {
-      var a = new THREE.Vector3(x1, y1, z1), b = new THREE.Vector3(x2, y2, z2);
-      var dir = new THREE.Vector3().subVectors(b, a);
-      var len = dir.length();
-      var geo = new THREE.CapsuleGeometry(r, len, 5, 12);
-      var q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
-      var m = new THREE.Matrix4().compose(new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5), q, new THREE.Vector3(1, 1, 1));
-      geo.applyMatrix4(m);
-      parts.push(geo);
+  // Load GLB, pose to idle, bake every skinned mesh into one static geometry.
+  async function loadAndBake(GLTFLoader, BGU) {
+    var loader = new GLTFLoader();
+    var gltf = await loader.loadAsync(MODEL_URL);
+    var model = gltf.scene;
+    scene.add(model);           // must be in-scene for world matrices
+    model.visible = false;      // we only render the baked points, not the mesh
+    model.updateMatrixWorld(true);
+
+    // pose to the idle standing frame (arms down, natural stance)
+    var idle = (THREE.AnimationClip.findByName(gltf.animations, "idle")) || gltf.animations[0];
+    if (idle) {
+      var mixer = new THREE.AnimationMixer(model);
+      var action = mixer.clipAction(idle);
+      action.play();
+      mixer.update(0.0);
+      model.updateMatrixWorld(true);
     }
-    // head
-    var head = new THREE.SphereGeometry(0.28, 18, 16);
-    head.scale(0.92, 1.1, 0.92);
-    head.translate(0, 2.74, 0);
-    parts.push(head);
-    // neck, torso, hips — slimmer, more athletic proportions
-    capsule(0, 2.42, 0, 0, 2.56, 0, 0.085);                // neck
-    capsule(-0.46, 2.36, 0, 0.46, 2.36, 0, 0.10);          // shoulders
-    capsule(0, 1.58, 0, 0, 2.34, 0, 0.30);                 // torso (tapered feel)
-    capsule(0, 1.34, 0, 0, 1.62, 0, 0.27);                 // hips
-    // arms (slightly out, slimmer)
-    capsule(-0.46, 2.32, 0, -0.58, 1.76, 0.02, 0.095);     // L upper arm
-    capsule(-0.58, 1.76, 0.02, -0.66, 1.18, 0.05, 0.078);  // L forearm
-    capsule(0.46, 2.32, 0, 0.58, 1.76, 0.02, 0.095);       // R upper arm
-    capsule(0.58, 1.76, 0.02, 0.66, 1.18, 0.05, 0.078);    // R forearm
-    var lh = new THREE.SphereGeometry(0.085, 10, 9); lh.translate(-0.68, 1.10, 0.05); parts.push(lh);
-    var rh = new THREE.SphereGeometry(0.085, 10, 9); rh.translate(0.68, 1.10, 0.05); parts.push(rh);
-    // legs — longer, slimmer
-    capsule(-0.19, 1.48, 0, -0.18, 0.80, 0, 0.135);        // L thigh
-    capsule(-0.18, 0.80, 0, -0.17, 0.10, 0.02, 0.095);     // L shin
-    capsule(0.19, 1.48, 0, 0.18, 0.80, 0, 0.135);          // R thigh
-    capsule(0.18, 0.80, 0, 0.17, 0.10, 0.02, 0.095);       // R shin
-    var lf = new THREE.BoxGeometry(0.15, 0.08, 0.30); lf.translate(-0.17, 0.05, 0.09); parts.push(lf);
-    var rf = new THREE.BoxGeometry(0.15, 0.08, 0.30); rf.translate(0.17, 0.05, 0.09); parts.push(rf);
 
-    var merged = BGU.mergeGeometries(parts.map(function (g) { return g.toNonIndexed(); }), false);
-    merged.computeVertexNormals();
-    // centre vertically
-    merged.computeBoundingBox();
-    var bb = merged.boundingBox;
-    var cy = (bb.min.y + bb.max.y) / 2;
-    merged.translate(0, -cy, 0);
+    var v = new THREE.Vector3();
+    var baked = [];
+    model.traverse(function (o) {
+      if (!o.isSkinnedMesh) return;
+      o.skeleton.update();
+      var g = o.geometry;
+      var pos = g.attributes.position;
+      var arr = new Float32Array(pos.count * 3);
+      for (var i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        o.applyBoneTransform(i, v);     // posed, in mesh-local space
+        v.applyMatrix4(o.matrixWorld);  // -> world space
+        arr[i * 3] = v.x; arr[i * 3 + 1] = v.y; arr[i * 3 + 2] = v.z;
+      }
+      var bg = new THREE.BufferGeometry();
+      bg.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+      if (g.index) bg.setIndex(g.index.clone());
+      baked.push(bg);
+    });
 
-    // --- low-poly wireframe ---
-    var wire = new THREE.LineSegments(
-      new THREE.WireframeGeometry(merged),
-      new THREE.LineBasicMaterial({ color: 0x3f8cff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false })
-    );
-    group.add(wire);
+    scene.remove(model);
 
-    // --- surface point cloud ---
-    var sampleMesh = new THREE.Mesh(merged, new THREE.MeshBasicMaterial());
-    var sampler = new MeshSurfaceSampler(sampleMesh).build();
-    var N = 9000;
+    var bodyGeo = baked.length > 1 ? BGU.mergeGeometries(baked, false) : baked[0];
+
+    // centre at origin and normalise height
+    bodyGeo.computeBoundingBox();
+    var bb = bodyGeo.boundingBox;
+    var cx = (bb.min.x + bb.max.x) / 2;
+    var cyc = (bb.min.y + bb.max.y) / 2;
+    var cz = (bb.min.z + bb.max.z) / 2;
+    bodyGeo.translate(-cx, -cyc, -cz);
+    var h = bb.max.y - bb.min.y || 1;
+    var target = 3.3;
+    bodyGeo.scale(target / h, target / h, target / h);
+    return bodyGeo;
+  }
+
+  function buildVisual(bodyGeo, MeshSurfaceSampler, SimplifyModifier) {
+    // --- low-poly wireframe (simplified for the faceted hologram look) ---
+    try {
+      var vCount = bodyGeo.attributes.position.count;
+      var keep = 900;
+      var remove = Math.max(0, vCount - keep);
+      var low = new SimplifyModifier().modify(bodyGeo, remove);
+      var wire = new THREE.LineSegments(
+        new THREE.WireframeGeometry(low),
+        new THREE.LineBasicMaterial({
+          color: 0x58a6ff, transparent: true, opacity: 0.16,
+          blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false
+        })
+      );
+      group.add(wire);
+    } catch (e) {
+      if (window.console) console.warn("[HMA] wireframe simplify skipped:", e);
+    }
+
+    // --- surface points ---
+    var mesh = new THREE.Mesh(bodyGeo, new THREE.MeshBasicMaterial());
+    var sampler = new MeshSurfaceSampler(mesh).build();
+    var N = 16000;
     var pos = new Float32Array(N * 3);
-    var sz = new Float32Array(N);
     var tmp = new THREE.Vector3();
     for (var i = 0; i < N; i++) {
       sampler.sample(tmp);
       pos[i * 3] = tmp.x; pos[i * 3 + 1] = tmp.y; pos[i * 3 + 2] = tmp.z;
-      sz[i] = 0.6 + Math.random() * 1.6;
     }
     var pgeo = new THREE.BufferGeometry();
     pgeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    pgeo.setAttribute("aSize", new THREE.BufferAttribute(sz, 1));
 
-    points = new THREE.Points(pgeo, new THREE.PointsMaterial({
-      color: 0x74b6ff, size: 0.045, map: dotTexture(), sizeAttenuation: true,
+    var pts = new THREE.Points(pgeo, new THREE.PointsMaterial({
+      color: 0x7cbaff, size: 0.028, map: dotTexture(), sizeAttenuation: true,
       transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending,
       depthWrite: false, depthTest: false
     }));
-    group.add(points);
-
-    group.scale.setScalar(1.08);
-
-    // --- bloom pipeline ---
-    composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    var bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 1.15, 0.6, 0.0);
-    composer.addPass(bloom);
-    composer.__bloom = bloom;
-
-    clock = new THREE.Clock();
+    group.add(pts);
   }
 
-  /* ---- soft round sprite for each point ---- */
+  function buildComposer(EffectComposer, RenderPass, UnrealBloomPass) {
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    var bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 1.0, 0.5, 0.0);
+    composer.addPass(bloom);
+    composer.__bloom = bloom;
+  }
+
   function dotTexture() {
     var c = document.createElement("canvas"); c.width = c.height = 64;
     var g = c.getContext("2d");
     var rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
     rg.addColorStop(0, "rgba(255,255,255,1)");
-    rg.addColorStop(0.25, "rgba(190,224,255,0.95)");
-    rg.addColorStop(0.6, "rgba(90,160,255,0.35)");
-    rg.addColorStop(1, "rgba(60,130,255,0)");
+    rg.addColorStop(0.25, "rgba(200,228,255,0.95)");
+    rg.addColorStop(0.6, "rgba(96,164,255,0.35)");
+    rg.addColorStop(1, "rgba(64,132,255,0)");
     g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
     var tex = new THREE.Texture(c); tex.needsUpdate = true; return tex;
   }
 
-  /* ---- Sizing ---- */
   function resize() {
     if (!ready) return;
     var rect = canvas.getBoundingClientRect();
@@ -167,14 +192,11 @@
     camera.updateProjectionMatrix();
   }
 
-  /* ---- Loop ---- */
   function render() {
     var t = clock.getElapsedTime();
     if (!reduce) {
-      group.rotation.y = Math.sin(t * 0.18) * 0.5;          // slow sway, not a full spin
-      group.position.y = Math.sin(t * 0.7) * 0.06;
-      var s = 1.08 + Math.sin(t * 1.1) * 0.006;             // breathing
-      group.scale.setScalar(s);
+      group.rotation.y = Math.sin(t * 0.16) * 0.45;
+      group.position.y = Math.sin(t * 0.7) * 0.05;
     }
     composer.render();
   }
@@ -190,9 +212,7 @@
   }
   function stop() { running = false; if (rafId) cancelAnimationFrame(rafId); }
 
-  /* ---- Wire up ---- */
   if (isAnima()) boot();
-
   window.addEventListener("resize", function () { if (ready) { resize(); if (!running) render(); } });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) start(); });
   if ("IntersectionObserver" in window) {
