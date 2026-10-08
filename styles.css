@@ -31,8 +31,9 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ---- Nocturne / architectural dark ---- */
-[data-theme="nocturne"] {
+/* ---- Nocturne / architectural dark (shared by Aurora) ---- */
+[data-theme="nocturne"],
+[data-theme="aurora"] {
   --bg:        #15130f;   /* obsidian warm   */
   --bg-2:      #1d1a15;
   --surface:   #201c16;
@@ -150,7 +151,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: var(--display-weight
 }
 .hero .wrap { position: relative; z-index: 2; }
 
-/* Holographic wireframe (canvas, drawn in hologram.js) */
+/* Holographic wireframe (canvas, drawn in hologram.js) — Aurora option only */
 .hologram {
   position: absolute; top: 50%; right: clamp(-6rem, 2vw, 4rem);
   transform: translateY(-50%);
@@ -158,14 +159,15 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: var(--display-weight
   pointer-events: none; z-index: 1;
   opacity: 0; transition: opacity 1.6s var(--ease);
 }
-.hologram.is-ready { opacity: 1; }
+/* only the Aurora option reveals the hologram */
+[data-theme="aurora"] .hologram.is-ready { opacity: 1; }
 @media (max-width: 820px) {
   .hologram {
     right: 50%; transform: translate(50%, -50%);
     width: min(90vw, 460px); height: min(90vw, 460px);
-    z-index: 0; opacity: 0;
+    z-index: 0;
   }
-  .hologram.is-ready { opacity: .28; }
+  [data-theme="aurora"] .hologram.is-ready { opacity: .28; }
 }
 .hero__title {
   font-size: clamp(3.2rem, 9vw, 7.5rem);

@@ -39,13 +39,11 @@
     return out;
   })();
 
-  /* ---- Theme colours ---- */
+  /* ---- Theme colours (Aurora is always dark — glowing champagne) ---- */
   function palette() {
-    var dark = document.documentElement.getAttribute("data-theme") !== "atelier";
-    return dark
-      ? { line: [199, 162, 94], glow: 16, lineW: 1.1, edgeA: 0.85, vertA: 1, comp: "lighter", scan: 0.06 }
-      : { line: [154, 123, 67], glow: 0,  lineW: 1.0, edgeA: 0.55, vertA: 0.8, comp: "source-over", scan: 0.03 };
+    return { line: [199, 162, 94], glow: 16, lineW: 1.1, edgeA: 0.85, vertA: 1, comp: "lighter", scan: 0.06 };
   }
+  function isAurora() { return document.documentElement.getAttribute("data-theme") === "aurora"; }
 
   /* ---- Sizing ---- */
   var W = 0, H = 0, R = 0, cx = 0, cy = 0, dpr = 1;
@@ -129,18 +127,22 @@
   function tick() {
     if (!reduce) { ay += 0.0032; ax = -0.35 + Math.sin(ay * 0.4) * 0.18; scanY += H * 0.0035; }
     frame();
-    if (!reduce && running && inView && !document.hidden) raf = requestAnimationFrame(tick);
+    if (!reduce && running && inView && !document.hidden && isAurora()) raf = requestAnimationFrame(tick);
     else running = false;
   }
-  function start() { if (!running && !reduce) { running = true; raf = requestAnimationFrame(tick); } }
+  function start() {
+    if (running || !isAurora()) return;
+    if (reduce) { resize(); frame(); return; } // static frame, no loop
+    running = true; raf = requestAnimationFrame(tick);
+  }
+  function stop() { running = false; if (raf) cancelAnimationFrame(raf); ctx.clearRect(0, 0, W, H); }
 
   /* ---- Wire up ---- */
   resize();
-  frame();
   canvas.classList.add("is-ready");
-  start();
+  if (isAurora()) { frame(); start(); } // only draw when Aurora is active
 
-  window.addEventListener("resize", function () { resize(); frame(); });
+  window.addEventListener("resize", function () { resize(); if (isAurora()) frame(); });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) start(); });
 
   // pause when hero scrolls out of view
@@ -151,7 +153,8 @@
     }, { threshold: 0.01 }).observe(canvas);
   }
 
-  // redraw instantly on theme toggle
-  new MutationObserver(function () { frame(); })
-    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  // start/stop instantly on theme toggle
+  new MutationObserver(function () {
+    if (isAurora()) { resize(); frame(); start(); } else { stop(); }
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 })();
