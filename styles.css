@@ -31,9 +31,10 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ---- Nocturne / architectural dark (shared by Aurora) ---- */
+/* ---- Nocturne / architectural dark (shared by Aurora + Anima) ---- */
 [data-theme="nocturne"],
-[data-theme="aurora"] {
+[data-theme="aurora"],
+[data-theme="anima"] {
   --bg:        #15130f;   /* obsidian warm   */
   --bg-2:      #1d1a15;
   --surface:   #201c16;
@@ -168,6 +169,30 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: var(--display-weight
     z-index: 0;
   }
   [data-theme="aurora"] .hologram.is-ready { opacity: .28; }
+}
+
+/* Particle human figure (canvas, drawn in holobody.js) — Anima option only */
+.holobody {
+  position: absolute; top: 50%; right: clamp(-2rem, 4vw, 6rem);
+  transform: translateY(-50%);
+  width: min(34vw, 380px); height: min(80vh, 720px);
+  pointer-events: none; z-index: 1;
+  opacity: 0; transition: opacity 1.8s var(--ease);
+}
+[data-theme="anima"] .holobody.is-ready { opacity: 1; }
+@media (max-width: 820px) {
+  .holobody {
+    right: 50%; transform: translate(50%, -50%);
+    width: min(70vw, 300px); height: min(70vh, 560px);
+    z-index: 0;
+  }
+  [data-theme="anima"] .holobody.is-ready { opacity: .3; }
+}
+/* Anima recolours the hero wash to a cool blue */
+[data-theme="anima"] .hero {
+  background:
+    radial-gradient(55% 55% at 76% 42%, rgba(70,150,255,0.16), transparent 70%),
+    var(--bg);
 }
 .hero__title {
   font-size: clamp(3.2rem, 9vw, 7.5rem);
