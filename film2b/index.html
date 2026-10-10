@@ -183,7 +183,7 @@
     const pillarIn = [16, 19.6, 23.2, 26.8, 30.4, 34];
 
     const goldMat = new THREE.MeshBasicMaterial({ color: 0xe3c488, transparent: true, opacity: 0.95 });
-    const beamGeo = new THREE.CylinderGeometry(0.02, 0.02, 1, 10); beamGeo.translate(0, 0.5, 0); // pivot at bottom
+    const beamGeo = new THREE.CylinderGeometry(0.045, 0.045, 1, 12); beamGeo.translate(0, 0.5, 0); // pivot at bottom
     const beams = [], nodes = [], glows = [], pulses = [];
     const nodeGeo = new THREE.SphereGeometry(0.055, 16, 16);
 
@@ -253,6 +253,7 @@
     function loop(ts){ if(t0===null)t0=ts; draw(((ts-t0)/1000)%TOTAL); requestAnimationFrame(loop); }
     requestAnimationFrame(loop);
     window.__seek = s => draw(((s % TOTAL) + TOTAL) % TOTAL);
+    window.__d = { beams, axis, base, cap, group, camera, H, BY };
   </script>
 </body>
 </html>
