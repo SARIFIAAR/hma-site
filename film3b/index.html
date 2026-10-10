@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HMA — The Architecture Assembles (3D structure — 3B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<style>
+  :root{
+    --gold:#e3c488; --soft:#d8c7a6; --ivory:#f8f3ea; --champagne:#c7a25e;
+    --fs-display: clamp(2.6rem, 6.0vw, 4.6rem);
+    --fs-headline:clamp(1.7rem, 3.8vw, 3.0rem);
+    --fs-lead:    clamp(1.5rem, 3.1vw, 2.5rem);
+    --fs-body:    clamp(1.5rem, 2.7vw, 2.2rem);
+    --fs-attr:    clamp(.72rem, 1.15vw, .9rem);
+    --fs-eyebrow: clamp(.68rem, 1.0vw, .82rem);
+    --tr-display:.012em; --tr-headline:.08em; --tr-attr:.2em; --tr-eyebrow:.34em;
+    --mx:7.5%; --mb:15%; --block-w:min(56ch,80%);
+    --ease-out:cubic-bezier(.22,1,.36,1); --ease-in:cubic-bezier(.4,0,1,1);
+    --dur-in:900ms; --dur-out:600ms; --lift:16px;
+  }
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;background:#000;overflow:hidden;font-family:"Inter",sans-serif}
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
+  .frame{position:relative;width:100vw;max-height:100vh;aspect-ratio:16/9;overflow:hidden}
+  #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .vig{position:absolute;inset:0;pointer-events:none;
+       background:
+         linear-gradient(0deg, rgba(0,0,0,.80) 0%, rgba(0,0,0,.42) 24%, transparent 50%),
+         linear-gradient(90deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.18) 34%, transparent 55%),
+         radial-gradient(135% 115% at 50% 40%, transparent 55%, rgba(0,0,0,.5) 100%)}
+  .block{position:absolute;left:var(--mx);bottom:var(--mb);width:var(--block-w);
+         text-align:left;color:var(--ivory);
+         opacity:0;transform:translateY(var(--lift));
+         transition:opacity var(--dur-out) var(--ease-in),transform var(--dur-out) var(--ease-in);
+         text-shadow:0 0 3px rgba(0,0,0,.92),0 0 16px rgba(0,0,0,.8),0 3px 26px rgba(0,0,0,.6)}
+  .block.on{opacity:1;transform:none;
+            transition:opacity var(--dur-in) var(--ease-out),transform var(--dur-in) var(--ease-out)}
+  .rule{width:0;height:2px;background:var(--gold);margin:0 0 1.3rem;
+        box-shadow:0 0 12px rgba(227,196,136,.5);transition:width var(--dur-out) var(--ease-in)}
+  .block.on .rule{width:52px;transition:width 1100ms var(--ease-out) 120ms}
+  .r-eyebrow{font-family:"Inter",sans-serif;font-weight:500;text-transform:uppercase;
+             font-size:var(--fs-eyebrow);letter-spacing:var(--tr-eyebrow);color:var(--gold)}
+  .r-num{font-family:"Inter",sans-serif;font-weight:500;text-transform:uppercase;
+         font-size:var(--fs-eyebrow);letter-spacing:var(--tr-eyebrow);color:var(--soft)}
+  .r-display{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
+             font-size:var(--fs-display);letter-spacing:var(--tr-display);line-height:1.02}
+  .r-headline{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
+              text-transform:uppercase;font-size:var(--fs-headline);
+              letter-spacing:var(--tr-headline);line-height:1.08}
+  .r-lead{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;
+          color:var(--ivory);font-size:var(--fs-lead);letter-spacing:var(--tr-display);line-height:1.22}
+  .r-meaning{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;
+             color:var(--soft);font-size:var(--fs-lead);letter-spacing:var(--tr-display);line-height:1.3}
+  .r-body{font-family:"Cormorant Garamond",serif;font-weight:500;color:var(--ivory);
+          font-size:var(--fs-body);line-height:1.5;letter-spacing:.01em}
+  .r-attr{font-family:"Inter",sans-serif;font-weight:400;text-transform:uppercase;
+          color:var(--soft);font-size:var(--fs-attr);letter-spacing:var(--tr-attr);line-height:1.6}
+  .block > * + *{margin-top:.7rem}
+  .block .rule + *{margin-top:0}
+  @media (prefers-reduced-motion: reduce){
+    :root{--lift:0px}
+    .block,.block.on{transition:opacity var(--dur-out) ease}
+    .rule,.block.on .rule{transition:none;width:52px}
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+      <canvas id="scene"></canvas>
+      <div class="vig"></div>
+
+      <div class="block" data-in="2" data-out="6">
+        <div class="rule"></div><div class="r-lead">Everything begins with a single intention.</div>
+      </div>
+      <div class="block" data-in="7.2" data-out="11">
+        <div class="rule"></div>
+        <div class="r-headline">The Human Mastery Architecture</div>
+        <div class="r-eyebrow">Architect What Matters Most</div>
+      </div>
+      <div class="block" data-in="12" data-out="15.5">
+        <div class="rule"></div><div class="r-lead">Six dimensions of one system.</div>
+      </div>
+      <div class="block" data-in="16" data-out="19.4">
+        <div class="rule"></div><div class="r-num">01</div>
+        <div class="r-display">Mind</div>
+        <div class="r-attr">Clarity · Focus · Resilience · Awareness · Expansion</div>
+      </div>
+      <div class="block" data-in="19.6" data-out="23">
+        <div class="rule"></div><div class="r-num">02</div>
+        <div class="r-display">Body</div>
+        <div class="r-attr">Energy · Health · Vitality · Longevity · Harmony</div>
+      </div>
+      <div class="block" data-in="23.2" data-out="26.6">
+        <div class="rule"></div><div class="r-num">03</div>
+        <div class="r-display">Behaviour</div>
+        <div class="r-attr">Discipline · Decisions · Execution · Adaptability · Sustainability</div>
+      </div>
+      <div class="block" data-in="26.8" data-out="30.2">
+        <div class="rule"></div><div class="r-num">04</div>
+        <div class="r-display">Relationships</div>
+        <div class="r-attr">Connection · Influence · Communication · Belonging · Contribution</div>
+      </div>
+      <div class="block" data-in="30.4" data-out="33.8">
+        <div class="rule"></div><div class="r-num">05</div>
+        <div class="r-display">Impact</div>
+        <div class="r-attr">Freedom · Influence · Legacy · Service · Abundance</div>
+      </div>
+      <div class="block" data-in="34" data-out="37.6">
+        <div class="rule"></div><div class="r-num">06</div>
+        <div class="r-display">Spirituality</div>
+        <div class="r-attr">Presence · Inner Alignment · Faith · Guidance · Higher Expression</div>
+      </div>
+      <div class="block" data-in="38.5" data-out="43.5">
+        <div class="rule"></div>
+        <div class="r-display">Integration</div>
+        <div class="r-meaning">Every dimension brought into one coherent whole.</div>
+      </div>
+      <div class="block" data-in="44" data-out="49">
+        <div class="rule"></div>
+        <div class="r-display">Purpose</div>
+        <div class="r-meaning">A meaningful life, fully aligned with who you are.</div>
+      </div>
+      <div class="block" data-in="49.5" data-out="53">
+        <div class="rule"></div>
+        <div class="r-eyebrow">The Result</div>
+        <div class="r-body">Greater clarity<br>Higher performance<br>More balance<br>A life of purpose &amp; meaning</div>
+      </div>
+      <div class="block" data-in="53.5" data-out="58">
+        <div class="rule"></div>
+        <div class="r-headline">The Human Mastery Architecture</div>
+        <div class="r-eyebrow">Architect What Matters Most</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { MeshSurfaceSampler } from "three/addons/math/MeshSurfaceSampler.js";
+    import { SimplifyModifier } from "three/addons/modifiers/SimplifyModifier.js";
+    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+    import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+
+    const TOTAL = 58;
+    const canvas = document.getElementById("scene");
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const beats = [].slice.call(document.querySelectorAll("[data-in]"));
+    beats.forEach(b => { b._in = parseFloat(b.dataset.in); b._out = parseFloat(b.dataset.out); });
+
+    const easeOutCubic = x => 1 - Math.pow(1 - x, 3);
+    const smooth = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setClearColor(0x000000, 1);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 100);
+    camera.position.set(0, 0, 7);
+    const group = new THREE.Group();
+    scene.add(group);
+
+    function dot() {
+      const c = document.createElement("canvas"); c.width = c.height = 64;
+      const g = c.getContext("2d"); const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      rg.addColorStop(0, "rgba(255,250,240,1)"); rg.addColorStop(.3, "rgba(227,196,136,.9)");
+      rg.addColorStop(.65, "rgba(150,110,50,.25)"); rg.addColorStop(1, "rgba(120,90,40,0)");
+      g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
+      const t = new THREE.Texture(c); t.needsUpdate = true; return t;
+    }
+    const tex = dot();
+
+    const CORE = new THREE.Vector3(0, 0.45, 0.34);
+    const anchors = [
+      [0, 1.42, 0.20], [0, 0.52, 0.34], [0, -0.05, 0.34],
+      [-0.30, 0.55, 0.30], [0.46, 0.60, 0.24], [0, 1.82, 0.02]
+    ];
+    const pillarIn = [16, 19.6, 23.2, 26.8, 30.4, 34];
+
+    let N = 0, S, P, D, PH, posAttr, points;
+    let wire = null, lattice = null, coreSprite = null, composer = null;
+    const icos = [], glows = [];
+
+    async function build() {
+      const gltf = await new GLTFLoader().loadAsync("../models/Xbot.glb");
+      const model = gltf.scene; scene.add(model); model.visible = false; model.updateMatrixWorld(true);
+      const idle = THREE.AnimationClip.findByName(gltf.animations, "idle") || gltf.animations[0];
+      if (idle) { const m = new THREE.AnimationMixer(model); m.clipAction(idle).play(); m.update(0); model.updateMatrixWorld(true); }
+      const skins = []; model.traverse(o => { if (o.isSkinnedMesh) skins.push(o); });
+      skins.sort((a, b) => b.geometry.attributes.position.count - a.geometry.attributes.position.count);
+      const skin = skins[0]; skin.skeleton.update();
+      const g = skin.geometry, pa = g.attributes.position, tmp = new THREE.Vector3();
+      const baked = new Float32Array(pa.count * 3);
+      for (let i = 0; i < pa.count; i++) { tmp.fromBufferAttribute(pa, i); skin.applyBoneTransform(i, tmp); tmp.applyMatrix4(skin.matrixWorld); baked[i*3]=tmp.x; baked[i*3+1]=tmp.y; baked[i*3+2]=tmp.z; }
+      const bg = new THREE.BufferGeometry(); bg.setAttribute("position", new THREE.BufferAttribute(baked, 3)); if (g.index) bg.setIndex(g.index.clone());
+      bg.computeBoundingBox(); const bb = bg.boundingBox;
+      bg.translate(-(bb.min.x+bb.max.x)/2, -(bb.min.y+bb.max.y)/2, -(bb.min.z+bb.max.z)/2);
+      const sc = 3.3 / ((bb.max.y - bb.min.y) || 1); bg.scale(sc, sc, sc);
+      scene.remove(model);
+
+      // --- low-poly wireframe body (structure) ---
+      try {
+        const low = new SimplifyModifier().modify(bg, Math.max(0, bg.attributes.position.count - 760));
+        wire = new THREE.LineSegments(new THREE.WireframeGeometry(low),
+          new THREE.LineBasicMaterial({ color: 0xc7a25e, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
+        group.add(wire);
+      } catch (e) { console.warn("wire skipped", e); }
+
+      // --- surface points ---
+      N = 12000;
+      const sampler = new MeshSurfaceSampler(new THREE.Mesh(bg, new THREE.MeshBasicMaterial())).build();
+      P = new Float32Array(N*3); S = new Float32Array(N*3); D = new Float32Array(N); PH = new Float32Array(N);
+      const v = new THREE.Vector3();
+      for (let i = 0; i < N; i++) {
+        sampler.sample(v); P[i*3]=v.x; P[i*3+1]=v.y; P[i*3+2]=v.z;
+        const dir = new THREE.Vector3(Math.random()*2-1, Math.random()*2-1, Math.random()*2-1).normalize();
+        const r = 3.2 + Math.random()*3.2; S[i*3]=dir.x*r; S[i*3+1]=dir.y*r*0.8; S[i*3+2]=dir.z*r;
+        D[i] = Math.random()*0.5; PH[i] = Math.random()*Math.PI*2;
+      }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(S), 3));
+      posAttr = pg.attributes.position;
+      points = new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xe8ca8e, size: 0.028, map: tex, sizeAttenuation: true, transparent: true, opacity: .92, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
+      group.add(points);
+
+      // --- pillar nodes: rotating 3D icosahedra + glow ---
+      const icoGeo = new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(0.11, 0));
+      anchors.forEach(a => {
+        const ico = new THREE.LineSegments(icoGeo, new THREE.LineBasicMaterial({ color: 0xfff1d6, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
+        ico.position.set(a[0], a[1], a[2]); ico.scale.setScalar(0.001); group.add(ico); icos.push(ico);
+        const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0xffe9bf, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, opacity: 0 }));
+        gl.position.set(a[0], a[1], a[2]); gl.scale.setScalar(0.001); group.add(gl); glows.push(gl);
+      });
+
+      // --- lattice: lines from each pillar to the core (internal architecture) ---
+      const lp = [];
+      anchors.forEach(a => { lp.push(a[0], a[1], a[2], CORE.x, CORE.y, CORE.z); });
+      const lg = new THREE.BufferGeometry(); lg.setAttribute("position", new THREE.Float32BufferAttribute(lp, 3));
+      lattice = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0xe3c488, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
+      group.add(lattice);
+
+      coreSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0xffe9bf, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, opacity: 0 }));
+      coreSprite.position.copy(CORE); coreSprite.scale.setScalar(0.001); group.add(coreSprite);
+
+      composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.9, 0.5, 0.0));
+      resize();
+    }
+
+    function resize() {
+      const r = canvas.getBoundingClientRect(); const w = Math.max(1, r.width), hh = Math.max(1, r.height);
+      renderer.setSize(w, hh, false); if (composer) composer.setSize(w, hh);
+      camera.aspect = w / hh; camera.updateProjectionMatrix();
+    }
+    addEventListener("resize", resize);
+
+    let t0 = null;
+    const ASM_A = 6.5, ASM_B = 15;
+    function render(ts) {
+      if (t0 === null) t0 = ts;
+      const t = ((ts - t0) / 1000) % TOTAL;
+      if (points) {
+        const a = reduce ? 1 : smooth(ASM_A, ASM_B, t);
+        const arr = posAttr.array;
+        for (let i = 0; i < N; i++) {
+          let e = (a - D[i]) / 0.5; e = e < 0 ? 0 : e > 1 ? 1 : e; e = easeOutCubic(e);
+          const drift = (1 - e) * 0.18;
+          const sx = S[i*3]   + (reduce ? 0 : Math.sin(t*0.5 + PH[i]) * drift);
+          const sy = S[i*3+1] + (reduce ? 0 : Math.cos(t*0.45 + PH[i]) * drift);
+          const sz = S[i*3+2] + (reduce ? 0 : Math.sin(t*0.6 + PH[i]) * drift);
+          arr[i*3]   = sx + (P[i*3]   - sx) * e;
+          arr[i*3+1] = sy + (P[i*3+1] - sy) * e;
+          arr[i*3+2] = sz + (P[i*3+2] - sz) * e;
+        }
+        posAttr.needsUpdate = true;
+
+        const formed = smooth(ASM_A, ASM_B + 2, t);
+        // wider orbit + slight tilt so the 3D volume reads
+        if (!reduce) {
+          group.rotation.y = Math.sin(t * 0.13) * 0.72 * formed;
+          group.rotation.x = Math.sin(t * 0.08) * 0.07 * formed;
+        }
+        // body wireframe fades in once formed
+        if (wire) wire.material.opacity = 0.16 * formed;
+
+        // pillar icosahedra: ignite in sequence, rotate, hold + pulse
+        for (let k = 0; k < icos.length; k++) {
+          const lit = smooth(pillarIn[k], pillarIn[k] + 0.7, t);
+          const integ = 1 + 0.4 * smooth(38.5, 42, t);
+          const pulse = 0.9 + 0.1 * Math.sin(t * 2.4 + k);
+          icos[k].scale.setScalar(Math.max(0.001, lit * integ));
+          icos[k].material.opacity = lit * 0.95;
+          icos[k].rotation.y += 0.015; icos[k].rotation.x += 0.008;
+          glows[k].scale.setScalar(Math.max(0.001, lit * 0.26 * pulse * integ));
+          glows[k].material.opacity = lit * 0.8;
+        }
+        // lattice appears as integration binds the pillars to the core
+        const bind = smooth(38.5, 43, t);
+        if (lattice) lattice.material.opacity = bind * 0.55;
+        const core = smooth(38.5, 42.5, t);
+        coreSprite.scale.setScalar(Math.max(0.001, core * 1.5 * (0.9 + 0.1*Math.sin(t*2.2))));
+        coreSprite.material.opacity = core * 0.95;
+
+        composer.render();
+      }
+      for (let i = 0; i < beats.length; i++) beats[i].classList.toggle("on", t >= beats[i]._in && t < beats[i]._out);
+      requestAnimationFrame(render);
+    }
+    build().then(() => requestAnimationFrame(render)).catch(e => console.error("[HMA film4]", e));
+  </script>
+</body>
+</html>
