@@ -86,52 +86,52 @@
       <div class="block" data-in="2" data-out="6">
         <div class="rule"></div><div class="r-lead"><span class="mask">Everything begins with a single intention.</span></div>
       </div>
-      <div class="block" data-in="16" data-out="19.4">
+      <div class="block" data-in="7" data-out="10.4">
         <div class="rule"></div><div class="r-num">01</div>
         <div class="r-display"><span class="mask">Mind</span></div>
         <div class="r-attr">Clarity · Focus · Resilience · Awareness · Expansion</div>
       </div>
-      <div class="block" data-in="19.6" data-out="23">
+      <div class="block" data-in="10.6" data-out="14">
         <div class="rule"></div><div class="r-num">02</div>
         <div class="r-display"><span class="mask">Body</span></div>
         <div class="r-attr">Energy · Health · Vitality · Longevity · Harmony</div>
       </div>
-      <div class="block" data-in="23.2" data-out="26.6">
+      <div class="block" data-in="14.2" data-out="17.6">
         <div class="rule"></div><div class="r-num">03</div>
         <div class="r-display"><span class="mask">Behaviour</span></div>
         <div class="r-attr">Discipline · Decisions · Execution · Adaptability · Sustainability</div>
       </div>
-      <div class="block" data-in="26.8" data-out="30.2">
+      <div class="block" data-in="17.8" data-out="21.2">
         <div class="rule"></div><div class="r-num">04</div>
         <div class="r-display"><span class="mask">Relationships</span></div>
         <div class="r-attr">Connection · Influence · Communication · Belonging · Contribution</div>
       </div>
-      <div class="block" data-in="30.4" data-out="33.8">
+      <div class="block" data-in="21.4" data-out="24.8">
         <div class="rule"></div><div class="r-num">05</div>
         <div class="r-display"><span class="mask">Impact</span></div>
         <div class="r-attr">Freedom · Influence · Legacy · Service · Abundance</div>
       </div>
-      <div class="block" data-in="34" data-out="37.6">
+      <div class="block" data-in="25" data-out="28.4">
         <div class="rule"></div><div class="r-num">06</div>
         <div class="r-display"><span class="mask">Spirituality</span></div>
         <div class="r-attr">Presence · Inner Alignment · Faith · Guidance · Higher Expression</div>
       </div>
-      <div class="block" data-in="38.5" data-out="43.5">
+      <div class="block" data-in="29.5" data-out="34">
         <div class="rule"></div>
         <div class="r-display"><span class="mask">Integration</span></div>
         <div class="r-meaning">Every dimension bound into one coherent whole.</div>
       </div>
-      <div class="block" data-in="44" data-out="49">
+      <div class="block" data-in="34.5" data-out="39">
         <div class="rule"></div>
         <div class="r-display"><span class="mask">Purpose</span></div>
         <div class="r-meaning">The centre ignites — a life aligned with who you are.</div>
       </div>
-      <div class="block" data-in="49.5" data-out="53">
+      <div class="block" data-in="39.5" data-out="43">
         <div class="rule"></div>
         <div class="r-eyebrow">The Result</div>
         <div class="r-body">Greater clarity<br>Higher performance<br>More balance<br>A life of purpose &amp; meaning</div>
       </div>
-      <div class="block" data-in="53.5" data-out="58">
+      <div class="block" data-in="43.5" data-out="48">
         <div class="rule"></div>
         <div class="r-headline"><span class="mask">The Human Mastery Architecture</span></div>
         <div class="r-eyebrow">Architect What Matters Most</div>
@@ -145,7 +145,7 @@
     import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
     import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
-    const TOTAL = 58;
+    const TOTAL = 48;
     const canvas = document.getElementById("scene");
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const beats = [].slice.call(document.querySelectorAll("[data-in]"));
@@ -178,7 +178,7 @@
     coreGlow.scale.setScalar(0.001); group.add(coreGlow);
 
     // ---- six orbiting dimensions ----
-    const pillarIn = [16, 19.6, 23.2, 26.8, 30.4, 34];
+    const pillarIn = [7, 10.6, 14.2, 17.8, 21.4, 25];
     const P = [
       { r:1.15, tx:0.18, tz:0.10, sp:0.55, sz:0.11, ph:0.0 },
       { r:1.55, tx:-0.42, tz:0.16, sp:0.46, sz:0.12, ph:1.1 },
@@ -218,14 +218,14 @@
     function draw(t){
       // core appears at intention, ignites at purpose
       const born = smooth(2, 4.5, t);
-      const ignite = smooth(44, 47.5, t);
+      const ignite = smooth(34.5, 38, t);
       coreWire.material.opacity = born * (0.7 + 0.3*ignite);
       coreWire.rotation.y += 0.004; coreWire.rotation.x = Math.sin(t*0.2)*0.1;
       const cs = 1 + 0.06*Math.sin(t*1.6) + ignite*0.3; coreWire.scale.setScalar(cs);
       coreGlow.material.opacity = born*0.18 + ignite*0.9;
       coreGlow.scale.setScalar(Math.max(0.001, (0.7 + ignite*2.6) * (0.95 + 0.05*Math.sin(t*2))));
 
-      const bind = smooth(38.5, 42.5, t);
+      const bind = smooth(29.5, 33.5, t);
       // planets: appear one by one, orbit continuously
       for (let k=0;k<planets.length;k++){
         const pl = planets[k], appear = smooth(pillarIn[k], pillarIn[k]+0.9, t);
