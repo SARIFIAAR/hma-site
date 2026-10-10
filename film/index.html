@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
 <style>
-  :root{ --gold:#e3c488; --soft:#c8b496; --dur:32s; }
+  :root{ --gold:#e3c488; --soft:#d8c7a6; --ivory:#f8f3ea; --dur:32s; }
   *{margin:0;box-sizing:border-box}
   html,body{height:100%;background:#000;overflow:hidden}
   .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
@@ -25,11 +25,12 @@
 
   /* vignette for text legibility */
   .vig{position:absolute;inset:0;pointer-events:none;
-       background:radial-gradient(130% 120% at 50% 42%,transparent 55%,rgba(0,0,0,.55) 100%),
-                  linear-gradient(0deg,rgba(0,0,0,.55),transparent 38%)}
+       background:radial-gradient(130% 120% at 50% 42%,transparent 48%,rgba(0,0,0,.62) 100%),
+                  linear-gradient(0deg,rgba(0,0,0,.62),transparent 40%)}
 
-  .txt{position:absolute;color:var(--gold);opacity:0;animation:var(--dur) ease infinite both;
-       text-shadow:0 2px 30px rgba(0,0,0,.6)}
+  /* ivory text + strong dark halo so it reads over the gold glow */
+  .txt{position:absolute;color:var(--ivory);opacity:0;animation:var(--dur) ease infinite both;
+       text-shadow:0 0 3px rgba(0,0,0,.92),0 0 14px rgba(0,0,0,.85),0 3px 26px rgba(0,0,0,.75)}
   .center{left:0;right:0;text-align:center}
   .serif{font-family:"Cormorant Garamond",serif}
   .sans{font-family:"Inter",sans-serif;font-weight:400}
@@ -55,14 +56,17 @@
   @keyframes T_C1{0%{opacity:0}44%{opacity:0}48%{opacity:.9}55%{opacity:.9}58%{opacity:0}100%{opacity:0}}
 
   /* four dimensions */
-  .t-dims{top:40%;font-family:"Cormorant Garamond",serif;font-size:clamp(1.3rem,3.4vw,2.6rem);line-height:1.9;animation-name:T_DIMS}
+  .t-dims{top:34%;font-family:"Cormorant Garamond",serif;font-size:clamp(1.3rem,3.4vw,2.6rem);line-height:1.8;animation-name:T_DIMS;
+          padding:1.1rem 0;background:radial-gradient(ellipse 42% 80% at 50% 50%,rgba(0,0,0,.66),rgba(0,0,0,0) 72%)}
   .t-dims span{display:block}
   @keyframes T_DIMS{0%{opacity:0}60%{opacity:0;transform:translateY(12px)}64%{opacity:1;transform:none}75%{opacity:1}78%{opacity:0}100%{opacity:0}}
 
   /* integration -> purpose -> outcomes */
-  .t-integ{top:40%;font-size:clamp(2rem,6vw,4rem);letter-spacing:.2em;font-weight:600;animation-name:T_INTEG}
+  .t-integ{top:40%;font-size:clamp(2rem,6vw,4rem);letter-spacing:.2em;font-weight:600;animation-name:T_INTEG;
+           padding:.8rem 0;background:radial-gradient(ellipse 38% 90% at 50% 50%,rgba(0,0,0,.6),rgba(0,0,0,0) 72%)}
   @keyframes T_INTEG{0%{opacity:0}79%{opacity:0;transform:scale(.96)}83%{opacity:1;transform:none}88%{opacity:1}90%{opacity:0}100%{opacity:0}}
-  .t-purpose{top:40%;font-size:clamp(2rem,6vw,4rem);letter-spacing:.2em;font-weight:600;animation-name:T_PURP}
+  .t-purpose{top:40%;font-size:clamp(2rem,6vw,4rem);letter-spacing:.2em;font-weight:600;animation-name:T_PURP;
+             padding:.8rem 0;background:radial-gradient(ellipse 38% 90% at 50% 50%,rgba(0,0,0,.6),rgba(0,0,0,0) 72%)}
   @keyframes T_PURP{0%{opacity:0}89%{opacity:0;transform:scale(.96)}92%{opacity:1;transform:none}95%{opacity:1}97%{opacity:0}100%{opacity:0}}
   .t-out{bottom:13%;font-family:"Inter",sans-serif;font-weight:400;font-size:clamp(.8rem,1.8vw,1.15rem);letter-spacing:.3em;color:var(--soft);animation-name:T_OUT}
   @keyframes T_OUT{0%{opacity:0}92%{opacity:0}95%{opacity:.95}100%{opacity:.95}}
