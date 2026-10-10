@@ -217,10 +217,7 @@
     addEventListener("resize", resize); resize();
 
     let t0 = null;
-    function render(ts){
-      if (t0===null) t0 = ts;
-      const t = ((ts - t0)/1000) % TOTAL;
-
+    function draw(t){
       // opening axis draws
       axis.scale.y = reduce ? 1 : smooth(2, 5, t) * (H + 0.5);
 
@@ -252,9 +249,10 @@
 
       composer.render();
       for (let i=0;i<beats.length;i++) beats[i].classList.toggle("on", t>=beats[i]._in && t<beats[i]._out);
-      requestAnimationFrame(render);
     }
-    requestAnimationFrame(render);
+    function loop(ts){ if(t0===null)t0=ts; draw(((ts-t0)/1000)%TOTAL); requestAnimationFrame(loop); }
+    requestAnimationFrame(loop);
+    window.__seek = s => draw(((s % TOTAL) + TOTAL) % TOTAL);
   </script>
 </body>
 </html>
