@@ -164,7 +164,7 @@
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setClearColor(0x000000, 1);
     renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+    renderer.toneMapping = THREE.NoToneMapping;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 100);
     camera.position.set(0, 0.25, 6.6); camera.lookAt(0, 0.1, 0);
@@ -210,7 +210,7 @@
 
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 0.8, 0.5, 0.0));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 0.75, 0.45, 0.08));
 
     function resize(){ const r=canvas.getBoundingClientRect(); const w=Math.max(1,r.width),hh=Math.max(1,r.height);
       renderer.setSize(w,hh,false); composer.setSize(w,hh); camera.aspect=w/hh; camera.updateProjectionMatrix(); }
