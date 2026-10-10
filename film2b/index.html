@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HMA — The Architecture Builds Itself (3D · 2B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<style>
+  :root{
+    --gold:#e3c488; --soft:#d8c7a6; --ivory:#f8f3ea; --champagne:#c7a25e;
+    --fs-display: clamp(2.6rem, 6.0vw, 4.6rem);
+    --fs-headline:clamp(1.7rem, 3.8vw, 3.0rem);
+    --fs-lead:    clamp(1.5rem, 3.1vw, 2.5rem);
+    --fs-body:    clamp(1.5rem, 2.7vw, 2.2rem);
+    --fs-attr:    clamp(.72rem, 1.15vw, .9rem);
+    --fs-eyebrow: clamp(.68rem, 1.0vw, .82rem);
+    --tr-display:.012em; --tr-headline:.08em; --tr-attr:.2em; --tr-eyebrow:.34em;
+    --mx:7.5%; --mb:14%; --block-w:min(56ch,80%);
+    --ease-out:cubic-bezier(.22,1,.36,1); --ease-in:cubic-bezier(.4,0,1,1);
+    --dur-in:1000ms; --dur-out:550ms; --lift:14px;
+  }
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;background:#000;overflow:hidden;font-family:"Inter",sans-serif}
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
+  .frame{position:relative;width:100vw;max-height:100vh;aspect-ratio:16/9;overflow:hidden}
+  #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .vig{position:absolute;inset:0;pointer-events:none;
+       background:linear-gradient(0deg, rgba(0,0,0,.74) 0%, rgba(0,0,0,.30) 22%, transparent 48%),
+                  linear-gradient(90deg, rgba(0,0,0,.5) 0%, rgba(0,0,0,.12) 34%, transparent 55%)}
+
+  .block{position:absolute;left:var(--mx);bottom:var(--mb);width:var(--block-w);
+         text-align:left;color:var(--ivory);
+         opacity:0;transform:translateY(var(--lift));
+         transition:opacity var(--dur-out) var(--ease-in),transform var(--dur-out) var(--ease-in);
+         text-shadow:0 0 3px rgba(0,0,0,.9),0 0 16px rgba(0,0,0,.7)}
+  .block.on{opacity:1;transform:none;
+            transition:opacity var(--dur-in) var(--ease-out),transform var(--dur-in) var(--ease-out)}
+  .rule{width:0;height:2px;background:var(--gold);margin:0 0 1.2rem;
+        box-shadow:0 0 12px rgba(227,196,136,.5);transition:width var(--dur-out) var(--ease-in)}
+  .block.on .rule{width:52px;transition:width 1100ms var(--ease-out) 120ms}
+  .mask{display:inline-block;clip-path:inset(108% 0 -12% 0);
+        transition:clip-path var(--dur-in) var(--ease-out)}
+  .block.on .mask{clip-path:inset(-12% 0 -12% 0);transition:clip-path var(--dur-in) var(--ease-out) 120ms}
+
+  .r-eyebrow{font-family:"Inter",sans-serif;font-weight:500;text-transform:uppercase;
+             font-size:var(--fs-eyebrow);letter-spacing:var(--tr-eyebrow);color:var(--gold)}
+  .r-num{font-family:"Inter",sans-serif;font-weight:500;text-transform:uppercase;
+         font-size:var(--fs-eyebrow);letter-spacing:var(--tr-eyebrow);color:var(--soft)}
+  .r-display{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
+             font-size:var(--fs-display);letter-spacing:var(--tr-display);line-height:1.04}
+  .r-headline{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
+              text-transform:uppercase;font-size:var(--fs-headline);
+              letter-spacing:var(--tr-headline);line-height:1.1}
+  .r-lead{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;
+          color:var(--ivory);font-size:var(--fs-lead);letter-spacing:var(--tr-display);line-height:1.22}
+  .r-meaning{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;
+             color:var(--soft);font-size:var(--fs-lead);letter-spacing:var(--tr-display);line-height:1.3}
+  .r-body{font-family:"Cormorant Garamond",serif;font-weight:500;color:var(--ivory);
+          font-size:var(--fs-body);line-height:1.5;letter-spacing:.01em}
+  .r-attr{font-family:"Inter",sans-serif;font-weight:400;text-transform:uppercase;
+          color:var(--soft);font-size:var(--fs-attr);letter-spacing:var(--tr-attr);line-height:1.6}
+  .block > * + *{margin-top:.7rem}
+  .block .rule + *{margin-top:0}
+
+  @media (prefers-reduced-motion: reduce){
+    :root{--lift:0px}
+    .mask{clip-path:none}
+    .block,.block.on{transition:opacity var(--dur-out) ease}
+    .rule,.block.on .rule{transition:none;width:52px}
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="frame">
+      <canvas id="scene"></canvas>
+      <div class="vig"></div>
+
+      <div class="block" data-in="2" data-out="6">
+        <div class="rule"></div><div class="r-lead"><span class="mask">Everything begins with a single intention.</span></div>
+      </div>
+      <div class="block" data-in="7.2" data-out="11">
+        <div class="rule"></div>
+        <div class="r-headline"><span class="mask">The Human Mastery Architecture</span></div>
+        <div class="r-eyebrow">Architect What Matters Most</div>
+      </div>
+      <div class="block" data-in="12" data-out="15.5">
+        <div class="rule"></div><div class="r-lead"><span class="mask">Six dimensions of one system.</span></div>
+      </div>
+      <div class="block" data-in="16" data-out="19.4">
+        <div class="rule"></div><div class="r-num">01</div>
+        <div class="r-display"><span class="mask">Mind</span></div>
+        <div class="r-attr">Clarity · Focus · Resilience · Awareness · Expansion</div>
+      </div>
+      <div class="block" data-in="19.6" data-out="23">
+        <div class="rule"></div><div class="r-num">02</div>
+        <div class="r-display"><span class="mask">Body</span></div>
+        <div class="r-attr">Energy · Health · Vitality · Longevity · Harmony</div>
+      </div>
+      <div class="block" data-in="23.2" data-out="26.6">
+        <div class="rule"></div><div class="r-num">03</div>
+        <div class="r-display"><span class="mask">Behaviour</span></div>
+        <div class="r-attr">Discipline · Decisions · Execution · Adaptability · Sustainability</div>
+      </div>
+      <div class="block" data-in="26.8" data-out="30.2">
+        <div class="rule"></div><div class="r-num">04</div>
+        <div class="r-display"><span class="mask">Relationships</span></div>
+        <div class="r-attr">Connection · Influence · Communication · Belonging · Contribution</div>
+      </div>
+      <div class="block" data-in="30.4" data-out="33.8">
+        <div class="rule"></div><div class="r-num">05</div>
+        <div class="r-display"><span class="mask">Impact</span></div>
+        <div class="r-attr">Freedom · Influence · Legacy · Service · Abundance</div>
+      </div>
+      <div class="block" data-in="34" data-out="37.6">
+        <div class="rule"></div><div class="r-num">06</div>
+        <div class="r-display"><span class="mask">Spirituality</span></div>
+        <div class="r-attr">Presence · Inner Alignment · Faith · Guidance · Higher Expression</div>
+      </div>
+      <div class="block" data-in="38.5" data-out="43.5">
+        <div class="rule"></div>
+        <div class="r-display"><span class="mask">Integration</span></div>
+        <div class="r-meaning">Every dimension brought into one coherent whole.</div>
+      </div>
+      <div class="block" data-in="44" data-out="49">
+        <div class="rule"></div>
+        <div class="r-display"><span class="mask">Purpose</span></div>
+        <div class="r-meaning">A meaningful life, fully aligned with who you are.</div>
+      </div>
+      <div class="block" data-in="49.5" data-out="53">
+        <div class="rule"></div>
+        <div class="r-eyebrow">The Result</div>
+        <div class="r-body">Greater clarity<br>Higher performance<br>More balance<br>A life of purpose &amp; meaning</div>
+      </div>
+      <div class="block" data-in="53.5" data-out="58">
+        <div class="rule"></div>
+        <div class="r-headline"><span class="mask">The Human Mastery Architecture</span></div>
+        <div class="r-eyebrow">Architect What Matters Most</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+    import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+
+    const TOTAL = 58;
+    const canvas = document.getElementById("scene");
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const beats = [].slice.call(document.querySelectorAll("[data-in]"));
+    beats.forEach(b => { b._in = parseFloat(b.dataset.in); b._out = parseFloat(b.dataset.out); });
+    const smooth = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setClearColor(0x000000, 1);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 100);
+    camera.position.set(0, 0.25, 6.6); camera.lookAt(0, 0.1, 0);
+    const group = new THREE.Group(); scene.add(group);
+
+    // glow sprite
+    function dotTex(){ const c=document.createElement("canvas");c.width=c.height=64;const g=c.getContext("2d");
+      const rg=g.createRadialGradient(32,32,0,32,32,32);
+      rg.addColorStop(0,"rgba(255,251,242,1)");rg.addColorStop(.3,"rgba(231,201,138,.9)");
+      rg.addColorStop(.65,"rgba(150,110,50,.22)");rg.addColorStop(1,"rgba(120,90,40,0)");
+      g.fillStyle=rg;g.fillRect(0,0,64,64);const t=new THREE.Texture(c);t.needsUpdate=true;return t; }
+    const tex = dotTex();
+
+    const COLS = 6, SPAN = 5.0, BY = -1.55, H = 2.95;
+    const xs = Array.from({length:COLS}, (_,k)=> -SPAN/2 + (SPAN/(COLS-1))*k );
+    const pillarIn = [16, 19.6, 23.2, 26.8, 30.4, 34];
+
+    const goldMat = new THREE.MeshBasicMaterial({ color: 0xe3c488, transparent: true, opacity: 0.95 });
+    const beamGeo = new THREE.CylinderGeometry(0.02, 0.02, 1, 10); beamGeo.translate(0, 0.5, 0); // pivot at bottom
+    const beams = [], nodes = [], glows = [], pulses = [];
+    const nodeGeo = new THREE.SphereGeometry(0.055, 16, 16);
+
+    xs.forEach(x => {
+      const beam = new THREE.Mesh(beamGeo, goldMat.clone());
+      beam.position.set(x, BY, 0); beam.scale.set(1, 0.001, 1); group.add(beam); beams.push(beam);
+      const node = new THREE.Mesh(nodeGeo, new THREE.MeshBasicMaterial({ color: 0xfff3dc, transparent: true, opacity: 0 }));
+      node.position.set(x, BY + H, 0); node.scale.setScalar(0.001); group.add(node); nodes.push(node);
+      const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0xffe9bf, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, opacity: 0 }));
+      gl.position.set(x, BY + H, 0); gl.scale.setScalar(0.001); group.add(gl); glows.push(gl);
+      const p = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0xfff6e6, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, opacity: 0 }));
+      p.scale.setScalar(0.22); group.add(p); pulses.push(p);
+    });
+
+    // base + cap (horizontal beams) drawn at integration / purpose
+    const hGeo = new THREE.CylinderGeometry(0.018, 0.018, 1, 8); hGeo.rotateZ(Math.PI/2); hGeo.translate(-0.5, 0, 0); // pivot at left
+    const base = new THREE.Mesh(hGeo, goldMat.clone()); base.position.set(-SPAN/2 - 0.3, BY, 0); base.scale.set(0.001,1,1); group.add(base);
+    const cap  = new THREE.Mesh(hGeo, goldMat.clone());  cap.position.set(-SPAN/2 - 0.3, BY + H, 0); cap.scale.set(0.001,1,1); group.add(cap);
+    const SPANH = SPAN + 0.6;
+
+    // central axis (opening)
+    const axis = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({ color: 0xc7a25e, transparent: true, opacity: 0.5 }));
+    axis.position.set(0, BY - 0.25, 0); axis.scale.set(1, 0.001, 1); group.add(axis);
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 0.8, 0.5, 0.0));
+
+    function resize(){ const r=canvas.getBoundingClientRect(); const w=Math.max(1,r.width),hh=Math.max(1,r.height);
+      renderer.setSize(w,hh,false); composer.setSize(w,hh); camera.aspect=w/hh; camera.updateProjectionMatrix(); }
+    addEventListener("resize", resize); resize();
+
+    let t0 = null;
+    function render(ts){
+      if (t0===null) t0 = ts;
+      const t = ((ts - t0)/1000) % TOTAL;
+
+      // opening axis draws
+      axis.scale.y = reduce ? 1 : smooth(2, 5, t) * (H + 0.5);
+
+      // columns grow in sequence
+      for (let k=0;k<COLS;k++){
+        const grow = reduce ? 1 : smooth(pillarIn[k], pillarIn[k]+1.1, t);
+        beams[k].scale.y = Math.max(0.001, grow * H);
+        const lit = grow;
+        nodes[k].scale.setScalar(Math.max(0.001, lit * 1));
+        nodes[k].material.opacity = lit;
+        const pulse = 0.85 + 0.15*Math.sin(t*2.6 + k);
+        glows[k].scale.setScalar(Math.max(0.001, lit * 0.34 * pulse));
+        glows[k].material.opacity = lit * 0.8;
+        // energy pulse travelling up a lit column
+        if (lit > 0.98 && !reduce){
+          const ph = ((t*0.5 + k*0.37) % 1);
+          pulses[k].position.set(xs[k], BY + ph*H, 0);
+          pulses[k].material.opacity = Math.sin(ph*Math.PI) * 0.9;
+        } else pulses[k].material.opacity = 0;
+      }
+
+      // base (integration) + cap (purpose)
+      base.scale.x = reduce ? SPANH : smooth(38.5, 40.5, t) * SPANH;
+      cap.scale.x  = reduce ? SPANH : smooth(44, 46, t) * SPANH;
+
+      // slow 3D orbit so the structure reads as dimensional
+      const formed = smooth(14, 18, t);
+      if (!reduce){ group.rotation.y = Math.sin(t*0.12)*0.5*formed; group.rotation.x = Math.sin(t*0.07)*0.05*formed; }
+
+      composer.render();
+      for (let i=0;i<beats.length;i++) beats[i].classList.toggle("on", t>=beats[i]._in && t<beats[i]._out);
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
