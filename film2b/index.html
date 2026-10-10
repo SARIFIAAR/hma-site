@@ -167,7 +167,7 @@
     renderer.toneMapping = THREE.NoToneMapping;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 100);
-    camera.position.set(0, 0.25, 6.6); camera.lookAt(0, 0.1, 0);
+    camera.position.set(0, 0, 8); camera.lookAt(0, 0, 0);
     const group = new THREE.Group(); scene.add(group);
 
     // glow sprite
@@ -182,8 +182,8 @@
     const xs = Array.from({length:COLS}, (_,k)=> -SPAN/2 + (SPAN/(COLS-1))*k );
     const pillarIn = [16, 19.6, 23.2, 26.8, 30.4, 34];
 
-    const goldMat = new THREE.MeshBasicMaterial({ color: 0xe3c488, transparent: true, opacity: 0.95 });
-    const beamGeo = new THREE.CylinderGeometry(0.045, 0.045, 1, 12); beamGeo.translate(0, 0.5, 0); // pivot at bottom
+    const goldMat = new THREE.MeshBasicMaterial({ color: 0xf2dca2, transparent: true, opacity: 1 });
+    const beamGeo = new THREE.CylinderGeometry(0.085, 0.085, 1, 14); beamGeo.translate(0, 0.5, 0); // pivot at bottom
     const beams = [], nodes = [], glows = [], pulses = [];
     const nodeGeo = new THREE.SphereGeometry(0.055, 16, 16);
 
@@ -245,7 +245,7 @@
 
       // slow 3D orbit so the structure reads as dimensional
       const formed = smooth(14, 18, t);
-      if (!reduce){ group.rotation.y = Math.sin(t*0.12)*0.5*formed; group.rotation.x = Math.sin(t*0.07)*0.05*formed; }
+      if (!reduce){ group.rotation.y = Math.sin(t*0.12)*0.4*formed; }
 
       composer.render();
       for (let i=0;i<beats.length;i++) beats[i].classList.toggle("on", t>=beats[i]._in && t<beats[i]._out);
