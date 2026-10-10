@@ -61,6 +61,25 @@
        transform:scale(.96)}
   .big.on{transform:scale(1)}
   .out{bottom:13%;font-size:clamp(.8rem,1.8vw,1.15rem);letter-spacing:.3em;color:var(--soft);font-weight:400}
+
+  /* ending beats: a word + a one-line meaning, then a brand card */
+  .end{position:absolute;left:0;right:0;top:34%;text-align:center;opacity:0;transform:translateY(12px);
+       transition:opacity .8s ease,transform .8s ease;padding:1.1rem 0;
+       text-shadow:0 0 3px rgba(0,0,0,.92),0 0 16px rgba(0,0,0,.85),0 3px 26px rgba(0,0,0,.72);
+       background:radial-gradient(ellipse 54% 130% at 50% 50%,rgba(0,0,0,.62),rgba(0,0,0,0) 72%)}
+  .end.on{opacity:1;transform:none}
+  .eyh{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
+       font-size:clamp(2.4rem,7vw,5rem);letter-spacing:.16em;line-height:1}
+  .eys{font-family:"Cormorant Garamond",serif;font-style:italic;color:var(--soft);
+       font-size:clamp(1.1rem,2.7vw,1.9rem);margin-top:.5rem}
+  .eyk{font-family:"Inter",sans-serif;color:var(--gold);letter-spacing:.42em;font-weight:500;
+       font-size:clamp(.68rem,1.4vw,.92rem)}
+  .eyo{font-family:"Cormorant Garamond",serif;color:var(--ivory);line-height:1.5;
+       font-size:clamp(1.2rem,2.6vw,2rem);margin:.6rem auto 0;max-width:78%}
+  .cl-title{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
+            font-size:clamp(1.6rem,4.4vw,3.4rem);letter-spacing:.15em}
+  .cl-sub{font-family:"Inter",sans-serif;color:var(--soft);letter-spacing:.42em;font-weight:400;
+          font-size:clamp(.7rem,1.5vw,1rem);margin-top:.7rem}
 </style>
 </head>
 <body>
@@ -70,7 +89,7 @@
       <img class="layer" data-in="6"  data-out="12" src="2.jpg" alt="">
       <img class="layer" data-in="11" data-out="16" src="3.jpg" alt="">
       <img class="layer" data-in="15" data-out="39" src="4.jpg" alt="">
-      <img class="layer" data-in="38" data-out="48" src="5.jpg" alt="">
+      <img class="layer" data-in="38" data-out="58" src="5.jpg" alt="">
       <div class="vig"></div>
 
       <div class="t center serif intent" data-in="2" data-out="6">Everything begins with a single intention.</div>
@@ -112,14 +131,28 @@
         <div class="attr">PRESENCE · INNER ALIGNMENT · FAITH · GUIDANCE · HIGHER EXPRESSION</div>
       </div>
 
-      <div class="t center serif big" data-in="39"   data-out="42.5">INTEGRATION</div>
-      <div class="t center serif big" data-in="42.7" data-out="45">PURPOSE</div>
-      <div class="t center out"       data-in="45.2" data-out="48">CLARITY · PERFORMANCE · BALANCE · MEANING</div>
+      <!-- ending: word + meaning, spaced out, then a brand card -->
+      <div class="end" data-in="38.5" data-out="43.5">
+        <div class="eyh">INTEGRATION</div>
+        <div class="eys">Every dimension brought into one coherent whole.</div>
+      </div>
+      <div class="end" data-in="44" data-out="49">
+        <div class="eyh">PURPOSE</div>
+        <div class="eys">A meaningful life, fully aligned with who you are.</div>
+      </div>
+      <div class="end" data-in="49.5" data-out="53">
+        <div class="eyk">THE&nbsp;RESULT</div>
+        <div class="eyo">Greater clarity · Higher performance<br>More balance · A life of purpose &amp; meaning</div>
+      </div>
+      <div class="end" data-in="53.5" data-out="58">
+        <div class="cl-title">THE&nbsp;HUMAN&nbsp;MASTERY&nbsp;ARCHITECTURE</div>
+        <div class="cl-sub">ARCHITECT&nbsp;WHAT&nbsp;MATTERS&nbsp;MOST</div>
+      </div>
     </div>
   </div>
 
   <script>
-    var TOTAL = 48;
+    var TOTAL = 58;
     var els = [].slice.call(document.querySelectorAll('[data-in]'));
     els.forEach(function(e){ e._in = parseFloat(e.dataset.in); e._out = parseFloat(e.dataset.out); });
     var start = null;
