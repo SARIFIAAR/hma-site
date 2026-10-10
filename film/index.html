@@ -8,78 +8,110 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
 <style>
-  :root{ --gold:#e3c488; --soft:#d8c7a6; --ivory:#f8f3ea; }
+  :root{
+    /* ---- palette (brand tokens, unchanged) ---- */
+    --gold:#e3c488; --soft:#d8c7a6; --ivory:#f8f3ea; --champagne:#c7a25e;
+
+    /* ---- type scale (one modular scale, ~1.5 ratio, applied by ROLE) ---- */
+    --fs-display: clamp(2.6rem, 6.0vw, 4.6rem);   /* pillar names, ending words   */
+    --fs-headline:clamp(1.7rem, 3.8vw, 3.0rem);   /* film title, closing-card title */
+    --fs-lead:    clamp(1.5rem, 3.1vw, 2.5rem);   /* spoken sentences + meaning lines */
+    --fs-body:    clamp(1.15rem,2.1vw, 1.7rem);   /* the-result list              */
+    --fs-attr:    clamp(.72rem, 1.15vw, .9rem);   /* pillar attributes (sans caps) */
+    --fs-eyebrow: clamp(.68rem, 1.0vw, .82rem);   /* kickers / numbers / sub (sans caps) */
+
+    /* ---- one letter-spacing system (one value per role) ---- */
+    --tr-display:.012em;   /* large serif — near-zero, elegant        */
+    --tr-headline:.08em;   /* serif caps title — gently open          */
+    --tr-attr:.2em;        /* sans caps attributes — medium           */
+    --tr-eyebrow:.34em;    /* sans caps labels — wide, luxury          */
+
+    /* ---- shared safe-area grid (every beat anchors here) ---- */
+    --mx:7.5%;             /* left margin (also right safe-gutter)     */
+    --mb:15%;              /* bottom baseline of the content block     */
+    --block-w:min(56ch,80%);
+
+    /* ---- one motion system ---- */
+    --ease-out:cubic-bezier(.22,1,.36,1);   /* refined entrance        */
+    --ease-in:cubic-bezier(.4,0,1,1);       /* exit                    */
+    --dur-in:900ms; --dur-out:600ms;
+    --lift:16px;           /* entrance rise distance                  */
+  }
   *{margin:0;box-sizing:border-box}
   html,body{height:100%;background:#000;overflow:hidden;font-family:"Inter",sans-serif}
   .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
   .frame{position:relative;width:100vw;max-height:100vh;aspect-ratio:16/9;overflow:hidden}
 
-  /* image layers */
+  /* ---- image layers (unchanged mechanism; the figure is the hero) ---- */
   .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
          transition:opacity 1.3s ease}
-  /* continuous slow drift that never freezes (alternate = eases back, no stop) */
   .layer.on{opacity:1;animation:kb 22s linear infinite alternate}
   @keyframes kb{from{transform:scale(1.04) translate(1%,1%)}to{transform:scale(1.18) translate(-1.5%,-1.5%)}}
 
-  /* legibility */
+  /* ---- ONE legibility treatment, used everywhere ----
+     Deep floor + left scrim so the lower-left plinth always reads over the
+     centre glow; top stays clean so the figure/head is never crushed. */
   .vig{position:absolute;inset:0;pointer-events:none;
-       background:radial-gradient(130% 120% at 50% 42%,transparent 46%,rgba(0,0,0,.62) 100%),
-                  linear-gradient(0deg,rgba(0,0,0,.66),transparent 42%),
-                  linear-gradient(90deg,rgba(0,0,0,.5),transparent 42%)}
+       background:
+         linear-gradient(0deg, rgba(0,0,0,.80) 0%, rgba(0,0,0,.42) 24%, transparent 50%),
+         linear-gradient(90deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.18) 34%, transparent 55%),
+         radial-gradient(135% 115% at 50% 40%, transparent 55%, rgba(0,0,0,.55) 100%)}
 
-  /* text base: ivory + dark halo so it reads over the gold glow */
-  .t{position:absolute;color:var(--ivory);opacity:0;transition:opacity .7s ease,transform .7s ease;
-     text-shadow:0 0 3px rgba(0,0,0,.92),0 0 14px rgba(0,0,0,.85),0 3px 26px rgba(0,0,0,.72)}
-  .t.on{opacity:1;transform:none}
-  .serif{font-family:"Cormorant Garamond",serif}
-  .center{left:0;right:0;text-align:center}
+  /* ============================================================
+     ONE LAYOUT PRIMITIVE
+     Every text beat is a left-anchored lower-third block sharing
+     the same margin (--mx), baseline (--mb), width and rhythm.
+     Reads as one designed system, and keeps type off the glow.
+     ============================================================ */
+  .block{position:absolute;left:var(--mx);bottom:var(--mb);width:var(--block-w);
+         text-align:left;color:var(--ivory);
+         opacity:0;transform:translateY(var(--lift));
+         transition:opacity var(--dur-out) var(--ease-in),
+                    transform var(--dur-out) var(--ease-in);
+         text-shadow:0 0 3px rgba(0,0,0,.92),0 0 16px rgba(0,0,0,.8),0 3px 26px rgba(0,0,0,.6)}
+  .block.on{opacity:1;transform:none;
+            transition:opacity var(--dur-in) var(--ease-out),
+                       transform var(--dur-in) var(--ease-out)}
 
-  .intent{top:40%;font-style:italic;font-size:clamp(2rem,5.2vw,3.8rem);transform:translateY(10px);
-          padding:.6rem 0;background:radial-gradient(ellipse 50% 90% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,0) 72%)}
+  /* shared anchor: a gold hairline rule drawn in once per beat */
+  .rule{width:0;height:2px;background:var(--gold);margin:0 0 1.3rem;
+         box-shadow:0 0 12px rgba(227,196,136,.5);
+         transition:width var(--dur-out) var(--ease-in)}
+  .block.on .rule{width:52px;transition:width 1100ms var(--ease-out) 120ms}
 
-  .title{bottom:17%;font-size:clamp(1.6rem,4.6vw,3.5rem);letter-spacing:.14em;font-weight:600}
-  .sub{bottom:12%;font-size:clamp(.7rem,1.5vw,1rem);letter-spacing:.42em;color:var(--soft);font-weight:400}
+  /* ---- ROLE styles (font + size + tracking, nothing ad hoc) ---- */
+  .r-eyebrow{font-family:"Inter",sans-serif;font-weight:500;text-transform:uppercase;
+             font-size:var(--fs-eyebrow);letter-spacing:var(--tr-eyebrow);color:var(--gold)}
+  .r-num{font-family:"Inter",sans-serif;font-weight:500;text-transform:uppercase;
+         font-size:var(--fs-eyebrow);letter-spacing:var(--tr-eyebrow);color:var(--soft)}
+  .r-display{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
+             font-size:var(--fs-display);letter-spacing:var(--tr-display);line-height:1.02}
+  .r-headline{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
+              text-transform:uppercase;font-size:var(--fs-headline);
+              letter-spacing:var(--tr-headline);line-height:1.08}
+  .r-lead{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;
+          color:var(--ivory);font-size:var(--fs-lead);letter-spacing:var(--tr-display);
+          line-height:1.22}
+  .r-meaning{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;
+             color:var(--soft);font-size:var(--fs-lead);letter-spacing:var(--tr-display);
+             line-height:1.3}
+  .r-body{font-family:"Cormorant Garamond",serif;font-weight:500;color:var(--ivory);
+          font-size:var(--fs-body);line-height:1.5;letter-spacing:.01em}
+  .r-attr{font-family:"Inter",sans-serif;font-weight:400;text-transform:uppercase;
+          color:var(--soft);font-size:var(--fs-attr);letter-spacing:var(--tr-attr);line-height:1.6}
 
-  .leadin{top:40%;font-size:clamp(2rem,5.2vw,3.8rem);font-style:italic;transform:translateY(10px);
-          padding:.6rem 0;background:radial-gradient(ellipse 50% 90% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,0) 72%)}
+  /* consistent vertical rhythm between stacked lines in a block */
+  .block > * + *{margin-top:.7rem}
+  .block .rule + *{margin-top:0}
 
-  /* pillar lower-third (left) */
-  .pillar{position:absolute;left:7%;bottom:15%;transform:translateX(-18px);
-          opacity:0;transition:opacity .7s ease,transform .7s ease}
-  .pillar.on{opacity:1;transform:none}
-  .pillar .rule{width:46px;height:2px;background:var(--gold);margin-bottom:14px;box-shadow:0 0 12px rgba(227,196,136,.5)}
-  .pillar .num{font-size:clamp(.72rem,1.4vw,.95rem);letter-spacing:.32em;color:var(--soft);
-               text-shadow:0 0 10px rgba(0,0,0,.9)}
-  .pillar .name{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
-                font-size:clamp(2.6rem,6.2vw,4.6rem);line-height:1.02;margin:6px 0 12px;
-                text-shadow:0 0 4px rgba(0,0,0,.9),0 0 18px rgba(0,0,0,.85)}
-  .pillar .attr{font-size:clamp(.82rem,1.6vw,1.1rem);letter-spacing:.22em;color:var(--soft);
-                text-shadow:0 0 10px rgba(0,0,0,.95)}
-
-  .big{top:40%;font-size:clamp(2rem,6vw,4rem);letter-spacing:.2em;font-weight:600;
-       padding:.8rem 0;background:radial-gradient(ellipse 40% 90% at 50% 50%,rgba(0,0,0,.6),rgba(0,0,0,0) 72%);
-       transform:scale(.96)}
-  .big.on{transform:scale(1)}
-  .out{bottom:13%;font-size:clamp(.8rem,1.8vw,1.15rem);letter-spacing:.3em;color:var(--soft);font-weight:400}
-
-  /* ending beats: a word + a one-line meaning, then a brand card */
-  .end{position:absolute;left:0;right:0;top:34%;text-align:center;opacity:0;transform:translateY(12px);
-       transition:opacity .8s ease,transform .8s ease;padding:1.1rem 0;
-       text-shadow:0 0 3px rgba(0,0,0,.92),0 0 16px rgba(0,0,0,.85),0 3px 26px rgba(0,0,0,.72);
-       background:radial-gradient(ellipse 54% 130% at 50% 50%,rgba(0,0,0,.62),rgba(0,0,0,0) 72%)}
-  .end.on{opacity:1;transform:none}
-  .eyh{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
-       font-size:clamp(2.4rem,7vw,5rem);letter-spacing:.16em;line-height:1}
-  .eys{font-family:"Cormorant Garamond",serif;font-style:italic;color:var(--soft);
-       font-size:clamp(1.1rem,2.7vw,1.9rem);margin-top:.5rem}
-  .eyk{font-family:"Inter",sans-serif;color:var(--gold);letter-spacing:.42em;font-weight:500;
-       font-size:clamp(.68rem,1.4vw,.92rem)}
-  .eyo{font-family:"Cormorant Garamond",serif;color:var(--ivory);line-height:1.5;
-       font-size:clamp(1.2rem,2.6vw,2rem);margin:.6rem auto 0;max-width:78%}
-  .cl-title{font-family:"Cormorant Garamond",serif;font-weight:600;color:var(--ivory);
-            font-size:clamp(1.6rem,4.4vw,3.4rem);letter-spacing:.15em}
-  .cl-sub{font-family:"Inter",sans-serif;color:var(--soft);letter-spacing:.42em;font-weight:400;
-          font-size:clamp(.7rem,1.5vw,1rem);margin-top:.7rem}
+  /* ---- Reduce Motion: fade only, no lift, no drift, rule shown static ---- */
+  @media (prefers-reduced-motion: reduce){
+    :root{--lift:0px}
+    .layer.on{animation:none;transform:none}
+    .block,.block.on{transition:opacity var(--dur-out) ease}
+    .rule{transition:none}
+    .block.on .rule{width:52px;transition:none}
+  }
 </style>
 </head>
 <body>
@@ -92,61 +124,83 @@
       <img class="layer" data-in="38" data-out="58" src="5.jpg" alt="">
       <div class="vig"></div>
 
-      <div class="t center serif intent" data-in="2" data-out="6">Everything begins with a single intention.</div>
+      <!-- opening intention -->
+      <div class="block" data-in="2" data-out="6">
+        <div class="rule"></div>
+        <div class="r-lead">Everything begins with a single intention.</div>
+      </div>
 
-      <div class="t center serif title" data-in="7.2" data-out="11">THE&nbsp;HUMAN&nbsp;MASTERY&nbsp;ARCHITECTURE</div>
-      <div class="t center sub"        data-in="7.6" data-out="11">ARCHITECT&nbsp;WHAT&nbsp;MATTERS&nbsp;MOST</div>
+      <!-- title card -->
+      <div class="block" data-in="7.2" data-out="11">
+        <div class="rule"></div>
+        <div class="r-headline">The Human Mastery Architecture</div>
+        <div class="r-eyebrow">Architect What Matters Most</div>
+      </div>
 
-      <div class="t center serif leadin" data-in="12" data-out="15.5">Six dimensions of one system.</div>
+      <!-- lead-in -->
+      <div class="block" data-in="12" data-out="15.5">
+        <div class="rule"></div>
+        <div class="r-lead">Six dimensions of one system.</div>
+      </div>
 
       <!-- one beat per pillar -->
-      <div class="pillar" data-in="16" data-out="19.4">
-        <div class="rule"></div><div class="num">01</div>
-        <div class="name">Mind</div>
-        <div class="attr">CLARITY · FOCUS · RESILIENCE · AWARENESS · EXPANSION</div>
+      <div class="block" data-in="16" data-out="19.4">
+        <div class="rule"></div>
+        <div class="r-num">01</div>
+        <div class="r-display">Mind</div>
+        <div class="r-attr">Clarity · Focus · Resilience · Awareness · Expansion</div>
       </div>
-      <div class="pillar" data-in="19.6" data-out="23">
-        <div class="rule"></div><div class="num">02</div>
-        <div class="name">Body</div>
-        <div class="attr">ENERGY · HEALTH · VITALITY · LONGEVITY · HARMONY</div>
+      <div class="block" data-in="19.6" data-out="23">
+        <div class="rule"></div>
+        <div class="r-num">02</div>
+        <div class="r-display">Body</div>
+        <div class="r-attr">Energy · Health · Vitality · Longevity · Harmony</div>
       </div>
-      <div class="pillar" data-in="23.2" data-out="26.6">
-        <div class="rule"></div><div class="num">03</div>
-        <div class="name">Behaviour</div>
-        <div class="attr">DISCIPLINE · DECISIONS · EXECUTION · ADAPTABILITY · SUSTAINABILITY</div>
+      <div class="block" data-in="23.2" data-out="26.6">
+        <div class="rule"></div>
+        <div class="r-num">03</div>
+        <div class="r-display">Behaviour</div>
+        <div class="r-attr">Discipline · Decisions · Execution · Adaptability · Sustainability</div>
       </div>
-      <div class="pillar" data-in="26.8" data-out="30.2">
-        <div class="rule"></div><div class="num">04</div>
-        <div class="name">Relationships</div>
-        <div class="attr">CONNECTION · INFLUENCE · COMMUNICATION · BELONGING · CONTRIBUTION</div>
+      <div class="block" data-in="26.8" data-out="30.2">
+        <div class="rule"></div>
+        <div class="r-num">04</div>
+        <div class="r-display">Relationships</div>
+        <div class="r-attr">Connection · Influence · Communication · Belonging · Contribution</div>
       </div>
-      <div class="pillar" data-in="30.4" data-out="33.8">
-        <div class="rule"></div><div class="num">05</div>
-        <div class="name">Impact</div>
-        <div class="attr">FREEDOM · INFLUENCE · LEGACY · SERVICE · ABUNDANCE</div>
+      <div class="block" data-in="30.4" data-out="33.8">
+        <div class="rule"></div>
+        <div class="r-num">05</div>
+        <div class="r-display">Impact</div>
+        <div class="r-attr">Freedom · Influence · Legacy · Service · Abundance</div>
       </div>
-      <div class="pillar" data-in="34" data-out="37.6">
-        <div class="rule"></div><div class="num">06</div>
-        <div class="name">Spirituality</div>
-        <div class="attr">PRESENCE · INNER ALIGNMENT · FAITH · GUIDANCE · HIGHER EXPRESSION</div>
+      <div class="block" data-in="34" data-out="37.6">
+        <div class="rule"></div>
+        <div class="r-num">06</div>
+        <div class="r-display">Spirituality</div>
+        <div class="r-attr">Presence · Inner Alignment · Faith · Guidance · Higher Expression</div>
       </div>
 
-      <!-- ending: word + meaning, spaced out, then a brand card -->
-      <div class="end" data-in="38.5" data-out="43.5">
-        <div class="eyh">INTEGRATION</div>
-        <div class="eys">Every dimension brought into one coherent whole.</div>
+      <!-- ending: word + meaning, then the brand card -->
+      <div class="block" data-in="38.5" data-out="43.5">
+        <div class="rule"></div>
+        <div class="r-display">Integration</div>
+        <div class="r-meaning">Every dimension brought into one coherent whole.</div>
       </div>
-      <div class="end" data-in="44" data-out="49">
-        <div class="eyh">PURPOSE</div>
-        <div class="eys">A meaningful life, fully aligned with who you are.</div>
+      <div class="block" data-in="44" data-out="49">
+        <div class="rule"></div>
+        <div class="r-display">Purpose</div>
+        <div class="r-meaning">A meaningful life, fully aligned with who you are.</div>
       </div>
-      <div class="end" data-in="49.5" data-out="53">
-        <div class="eyk">THE&nbsp;RESULT</div>
-        <div class="eyo">Greater clarity · Higher performance<br>More balance · A life of purpose &amp; meaning</div>
+      <div class="block" data-in="49.5" data-out="53">
+        <div class="rule"></div>
+        <div class="r-eyebrow">The Result</div>
+        <div class="r-body">Greater clarity · Higher performance<br>More balance · A life of purpose &amp; meaning</div>
       </div>
-      <div class="end" data-in="53.5" data-out="58">
-        <div class="cl-title">THE&nbsp;HUMAN&nbsp;MASTERY&nbsp;ARCHITECTURE</div>
-        <div class="cl-sub">ARCHITECT&nbsp;WHAT&nbsp;MATTERS&nbsp;MOST</div>
+      <div class="block" data-in="53.5" data-out="58">
+        <div class="rule"></div>
+        <div class="r-headline">The Human Mastery Architecture</div>
+        <div class="r-eyebrow">Architect What Matters Most</div>
       </div>
     </div>
   </div>
