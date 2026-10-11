@@ -168,6 +168,7 @@
     const camera = new THREE.PerspectiveCamera(40, 16/9, 0.1, 100);
     camera.position.set(0, 1.75, 8.6); camera.lookAt(0, 0, 0);
     const group = new THREE.Group(); scene.add(group);
+    group.scale.setScalar(0.76); // fit the full outer layer inside the frame (no clipping)
 
     function glowTex(){ const c=document.createElement("canvas");c.width=c.height=64;const g=c.getContext("2d");
       const rg=g.createRadialGradient(32,32,0,32,32,32);
