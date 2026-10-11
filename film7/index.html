@@ -30,7 +30,7 @@
   *{margin:0;box-sizing:border-box}
   html,body{height:100%;background:#000;overflow:hidden;font-family:"Inter",sans-serif}
   .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
-  .frame{position:relative;width:100vw;max-height:100vh;aspect-ratio:16/9;overflow:hidden}
+  .frame{position:relative;width:100%;height:100%;overflow:hidden}
   #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
   .vig{position:absolute;inset:0;pointer-events:none;
        background:linear-gradient(0deg, rgba(0,0,0,.74) 0%, rgba(0,0,0,.28) 22%, transparent 48%),
@@ -69,6 +69,9 @@
   .block > * + *{margin-top:.7rem}
   .block .rule + *{margin-top:0}
 
+  @media (max-width: 680px){
+    .block{left:6%;right:6%;width:auto;bottom:8%}
+  }
   @media (prefers-reduced-motion: reduce){
     :root{--lift:0px}
     .mask{clip-path:none}
@@ -168,7 +171,6 @@
     const camera = new THREE.PerspectiveCamera(40, 16/9, 0.1, 100);
     camera.position.set(0, 1.75, 8.6); camera.lookAt(0, 0, 0);
     const group = new THREE.Group(); scene.add(group);
-    group.scale.setScalar(0.76); // fit the full outer layer inside the frame (no clipping)
 
     function glowTex(){ const c=document.createElement("canvas");c.width=c.height=64;const g=c.getContext("2d");
       const rg=g.createRadialGradient(32,32,0,32,32,32);
@@ -254,8 +256,13 @@
     composer.addPass(new RenderPass(scene, camera));
     composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 0.72, 0.6, 0.12));
 
+    function fitCam(){
+      var v=camera.fov*Math.PI/180, h=2*Math.atan(Math.tan(v/2)*camera.aspect);
+      var d=Math.max(3.5/Math.sin(v/2), 3.5/Math.sin(h/2))*1.08;
+      camera.position.set(0, d*0.20, d*0.98); camera.lookAt(0,0,0);
+    }
     function resize(){ const r=canvas.getBoundingClientRect(); const w=Math.max(1,r.width),hh=Math.max(1,r.height);
-      renderer.setSize(w,hh,false); composer.setSize(w,hh); camera.aspect=w/hh; camera.updateProjectionMatrix(); }
+      renderer.setSize(w,hh,false); composer.setSize(w,hh); camera.aspect=w/hh; camera.updateProjectionMatrix(); fitCam(); }
     addEventListener("resize", resize); resize();
 
     let t0 = null;
