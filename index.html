@@ -9,6 +9,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css?v=8" />
+  <!-- ░░ Opening cinematic (film7) — scoped, reversible ░░ -->
+  <style>
+    .filmintro{position:relative;width:100%;height:100vh;height:100svh;background:#000;overflow:hidden}
+    .filmintro__frame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;pointer-events:none}
+    .filmintro__skip{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);
+      width:26px;height:42px;border:1px solid rgba(227,196,136,.5);border-radius:14px;display:block;z-index:2}
+    .filmintro__skip span{position:absolute;left:50%;top:9px;width:3px;height:8px;margin-left:-1.5px;
+      border-radius:2px;background:#e3c488;animation:filmintroScroll 1.8s ease-in-out infinite}
+    @keyframes filmintroScroll{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(14px)}}
+    @media (prefers-reduced-motion:reduce){.filmintro__skip span{animation:none;opacity:.8}}
+    /* two-option opening selector */
+    .filmpick{position:absolute;top:22px;left:50%;transform:translateX(-50%);z-index:3;
+      display:inline-flex;gap:.3rem;padding:.3rem;border:1px solid rgba(227,196,136,.3);
+      border-radius:999px;background:rgba(0,0,0,.35);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+    .filmpick__btn{border:0;cursor:pointer;border-radius:999px;padding:.45rem .95rem;
+      font-family:"Inter",sans-serif;font-weight:500;font-size:.72rem;letter-spacing:.1em;
+      color:rgba(248,243,234,.72);background:transparent;transition:background .3s,color .3s}
+    .filmpick__btn.is-active{background:#e3c488;color:#15130f}
+  </style>
   <script type="importmap">
   {
     "imports": {
@@ -58,6 +77,16 @@
   </header>
 
   <main>
+    <!-- ░░ 00 · Opening cinematic — two selectable options ░░ -->
+    <section class="filmintro" id="opening" aria-label="Opening cinematic">
+      <iframe class="filmintro__frame" id="filmFrame" src="film6b/index.html" title="The Human Mastery Architecture — opening cinematic" loading="eager" tabindex="-1" scrolling="no"></iframe>
+      <div class="filmpick" role="group" aria-label="Opening animation">
+        <button class="filmpick__btn is-active" type="button" data-film="film6b">Ⅰ&nbsp;·&nbsp;Solar</button>
+        <button class="filmpick__btn" type="button" data-film="film7">Ⅱ&nbsp;·&nbsp;Atmosphere</button>
+      </div>
+      <a class="filmintro__skip" href="#hero" aria-label="Enter the site"><span></span></a>
+    </section>
+
     <!-- ░░ Hero ░░ -->
     <section class="hero" id="hero">
       <canvas class="hologram" id="hologram" aria-hidden="true"></canvas>
@@ -385,5 +414,18 @@
   <script src="hologram.js?v=2"></script>
   <script src="anima3d.js?v=4"></script>
   <script src="script.js?v=3"></script>
+  <script>
+    /* opening cinematic: switch between the two options */
+    (function(){
+      var frame = document.getElementById('filmFrame');
+      var btns = [].slice.call(document.querySelectorAll('.filmpick__btn'));
+      btns.forEach(function(b){
+        b.addEventListener('click', function(){
+          frame.src = b.getAttribute('data-film') + '/index.html';
+          btns.forEach(function(x){ x.classList.toggle('is-active', x === b); });
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
