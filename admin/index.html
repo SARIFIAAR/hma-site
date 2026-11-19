@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HMA · Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f0d0a;
+      --bg2:      #141210;
+      --surface:  #1a1711;
+      --surface2: #201d18;
+      --border:   #2e2820;
+      --gold:     #e3c488;
+      --gold-dim: #9a7b43;
+      --text:     #e8e0d4;
+      --muted:    #8a7f72;
+      --dim:      #4a4238;
+      --success:  #6abf6a;
+      --danger:   #e05a5a;
+      --r: 4px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: "Inter", system-ui, sans-serif; font-size: 13px; line-height: 1.5; min-height: 100vh; }
+
+    /* ---- Topbar ---- */
+    .topbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 52px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+    .topbar__brand { font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+    .topbar__right { display: flex; align-items: center; gap: .9rem; }
+    #connStatus { font-size: 12px; color: var(--muted); }
+    #connStatus.ok  { color: var(--success); }
+    #connStatus.err { color: var(--danger); }
+
+    /* ---- Buttons ---- */
+    .btn { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid transparent; border-radius: var(--r); padding: .45rem 1rem; font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all .18s; text-decoration: none; }
+    .btn-primary  { background: var(--gold); color: #15130f; border-color: var(--gold); }
+    .btn-primary:hover { background: #d4b578; }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-ghost  { background: transparent; color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { border-color: var(--muted); }
+    .btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+    .btn-sm { padding: .28rem .6rem; font-size: 11px; }
+
+    /* ---- Sign-in screen ---- */
+    .signin-wrap { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 52px); padding: 2rem; }
+    .signin-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 2.5rem 2rem; width: 100%; max-width: 380px; text-align: center; }
+    .signin-mark { font-family: "Cormorant Garamond", Georgia, serif; font-size: 2.4rem; font-weight: 500; color: var(--gold); letter-spacing: .12em; margin-bottom: .4rem; }
+    .signin-box h2 { font-size: 15px; font-weight: 500; margin-bottom: .5rem; }
+    .signin-box p  { color: var(--muted); font-size: 12px; margin-bottom: 1.8rem; line-height: 1.6; }
+    .google-btn {
+      display: flex; align-items: center; justify-content: center; gap: .7rem;
+      width: 100%; padding: .75rem 1rem; border-radius: 6px; cursor: pointer;
+      background: #fff; color: #1f1f1f; border: 1px solid #dadce0;
+      font-family: inherit; font-size: 14px; font-weight: 500;
+      transition: background .18s, box-shadow .18s;
+    }
+    .google-btn:hover { background: #f8f8f8; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+    .google-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .signin-error { margin-top: 1rem; padding: .6rem .9rem; border-radius: var(--r); font-size: 12px; background: rgba(224,90,90,.09); border: 1px solid rgba(224,90,90,.25); color: var(--danger); }
+
+    /* ---- First-time setup overlay ---- */
+    .setup-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 2rem; width: 100%; max-width: 440px; }
+    .setup-box h2 { font-size: 15px; font-weight: 600; margin-bottom: .4rem; }
+    .setup-box p  { color: var(--muted); font-size: 12px; line-height: 1.6; margin-bottom: 1.2rem; }
+    .setup-box code { background: var(--surface2); padding: .1em .4em; border-radius: 3px; font-size: 11px; }
+
+    /* ---- Main layout ---- */
+    .main { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* ---- Notice ---- */
+    .notice { padding: .65rem .9rem; border-radius: var(--r); font-size: 12px; margin-bottom: 1rem; line-height: 1.4; }
+    .notice-info    { background: rgba(227,196,136,.07); border: 1px solid rgba(227,196,136,.2); color: var(--gold); }
+    .notice-success { background: rgba(106,191,106,.07); border: 1px solid rgba(106,191,106,.2); color: var(--success); }
+    .notice-error   { background: rgba(224,90,90,.09);   border: 1px solid rgba(224,90,90,.25);  color: var(--danger); }
+
+    /* ---- Fields ---- */
+    .field { margin-bottom: .9rem; }
+    .field label { display: block; font-size: 10px; font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: .35rem; }
+    .field input, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: .55rem .75rem; font-family: inherit; font-size: 13px; color: var(--text); transition: border-color .18s; resize: vertical; }
+    .field input:focus, .field textarea:focus { outline: none; border-color: var(--gold-dim); }
+    .field-row   { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+    .field-row-3 { display: grid; grid-template-columns: 64px 1fr 1.4fr; gap: .6rem; align-items: start; }
+
+    /* ---- Section cards ---- */
+    .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-bottom: .6rem; overflow: hidden; }
+    .section-card__hd { display: flex; align-items: center; justify-content: space-between; padding: .8rem 1rem; cursor: pointer; user-select: none; border-bottom: 1px solid transparent; transition: background .15s; }
+    .section-card__hd:hover { background: var(--surface2); }
+    .section-card.open .section-card__hd { border-bottom-color: var(--border); }
+    .section-card__label { font-size: 12px; font-weight: 500; }
+    .section-card__arrow { color: var(--dim); font-size: 9px; transition: transform .2s; }
+    .section-card.open .section-card__arrow { transform: rotate(180deg); }
+    .section-card__body { display: none; padding: 1rem; }
+    .section-card.open .section-card__body { display: block; }
+
+    /* ---- Users section ---- */
+    .users-list { margin-bottom: 1rem; }
+    .user-row { display: flex; align-items: center; justify-content: space-between; padding: .6rem .8rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: .4rem; }
+    .user-row__info { display: flex; align-items: center; gap: .6rem; }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--gold-dim); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--bg); flex-shrink: 0; }
+    .user-email { font-size: 12px; }
+    .user-you   { font-size: 10px; background: rgba(227,196,136,.15); color: var(--gold); border-radius: 99px; padding: .1rem .5rem; }
+    .users-add  { display: flex; gap: .5rem; }
+    .users-add input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: .5rem .75rem; font-family: inherit; font-size: 13px; color: var(--text); }
+    .users-add input:focus { outline: none; border-color: var(--gold-dim); }
+
+    /* ---- GitHub settings ---- */
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+
+    /* ---- Array items ---- */
+    .array-hint { font-size: 11px; color: var(--dim); margin-bottom: .6rem; font-style: italic; }
+    .array-item { display: grid; align-items: start; gap: .5rem; margin-bottom: .5rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
+    .array-item:last-child { border-bottom: 0; padding-bottom: 0; }
+    .array-item--stat { grid-template-columns: 1fr auto; }
+    .array-item--row  { grid-template-columns: 1fr auto; }
+    .array-item--card { grid-template-columns: 1fr auto; }
+    .array-add { margin-top: .6rem; }
+
+    /* ---- Color field ---- */
+    .color-row { display: flex; align-items: center; gap: .5rem; }
+    .color-row input[type="color"] { width: 30px; height: 30px; padding: 2px; cursor: pointer; border: 1px solid var(--border); border-radius: var(--r); background: var(--bg); flex-shrink: 0; }
+    .color-row input[type="text"] { font-family: 'SFMono-Regular', monospace; font-size: 12px; letter-spacing: .05em; }
+    .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+    .theme-divider { grid-column: 1/-1; border: 0; border-top: 1px solid var(--border); margin: .2rem 0; }
+    .theme-note { grid-column: 1/-1; font-size: 11px; color: var(--dim); font-style: italic; margin-top: .2rem; }
+
+    /* ---- Spinner ---- */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin .6s linear infinite; }
+    [hidden] { display: none !important; }
+
+    /* ---- Config warning ---- */
+    .config-warn { background: rgba(224,90,90,.09); border: 1px solid rgba(224,90,90,.25); border-radius: 8px; padding: 1.5rem; margin: 2rem auto; max-width: 560px; }
+    .config-warn h3 { color: var(--danger); font-size: 14px; margin-bottom: .5rem; }
+    .config-warn p  { color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .config-warn code { background: var(--surface2); padding: .1em .4em; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ░░ Topbar ░░ -->
+<header class="topbar">
+  <div class="topbar__brand">HMA · Admin</div>
+  <div class="topbar__right">
+    <span id="connStatus">Not signed in</span>
+    <a id="previewLink" class="btn btn-ghost" target="_blank" hidden>View site ↗</a>
+    <button id="signOutBtn" class="btn btn-ghost" hidden>Sign out</button>
+    <button id="saveBtn" class="btn btn-primary" disabled>Save to GitHub</button>
+  </div>
+</header>
+
+<div id="app">
+
+  <!-- ░░ Config warning (shown if Firebase config not filled in) ░░ -->
+  <div id="configWarn" class="config-warn" hidden>
+    <h3>Firebase not configured</h3>
+    <p>
+      Open <code>admin.html</code> and replace the placeholder values in <code>FIREBASE_CONFIG</code> (top of the script) with your Firebase project credentials.<br><br>
+      <strong>Steps:</strong> console.firebase.google.com → Create project → Authentication → Google → Enable →
+      Firestore → Create database → Project Settings → copy the config object.
+    </p>
+  </div>
+
+  <!-- ░░ Sign-in screen ░░ -->
+  <div class="signin-wrap" id="signinScreen">
+    <div class="signin-box">
+      <div class="signin-mark">HMA</div>
+      <h2>Admin Sign In</h2>
+      <p>Sign in with your Google account to access the site editor.</p>
+      <button class="google-btn" id="googleSignInBtn">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        </svg>
+        Sign in with Google
+      </button>
+      <div id="signinError" class="signin-error" hidden></div>
+    </div>
+  </div>
+
+  <!-- ░░ First-time setup (GitHub token) ░░ -->
+  <div class="signin-wrap" id="setupScreen" hidden>
+    <div class="setup-box">
+      <h2>One-time setup</h2>
+      <p>Welcome. Enter your GitHub details once — they will be saved to Firestore and all editors will use them automatically from now on.</p>
+      <div class="field">
+        <label>Repository (owner/name)</label>
+        <input id="setupRepo" type="text" value="arianahma/HMA" />
+      </div>
+      <div class="field">
+        <label>Branch</label>
+        <input id="setupBranch" type="text" value="main" />
+      </div>
+      <div class="field">
+        <label>GitHub Personal Access Token (<code>repo</code> scope)</label>
+        <input id="setupToken" type="password" placeholder="ghp_…" autocomplete="off" />
+      </div>
+      <button id="setupSaveBtn" class="btn btn-primary" style="width:100%;justify-content:center">Save &amp; Connect</button>
+      <div id="setupError" class="notice notice-error" style="margin-top:.8rem" hidden></div>
+    </div>
+  </div>
+
+  <!-- ░░ Main editor ░░ -->
+  <main class="main" id="editorMain" hidden>
+    <div id="notif" hidden></div>
+    <div id="editor"></div>
+  </main>
+
+</div>
+
+<script type="module">
+// ===================================================================
+// FIREBASE CONFIG — replace with your project's values
+// Get these from: console.firebase.google.com → Project Settings
+// ===================================================================
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyBoHcMQgNVr36tlVOufsR7_EoXEfrvM1ig",
+  authDomain:        "hmasystem-47c7b.firebaseapp.com",
+  projectId:         "hmasystem-47c7b",
+  storageBucket:     "hmasystem-47c7b.firebasestorage.app",
+  messagingSenderId: "54790202950",
+  appId:             "1:54790202950:web:699c803e86461da1870c47",
+  measurementId:     "G-9EPK2YH4XF"
+};
+// ===================================================================
+
+import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+                                                from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, serverTimestamp }
+                                                from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+
+const app  = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+let currentUser = null;
+let GH = { owner: '', repo: '', branch: 'main', token: '', sha: null };
+
+/* ================================================================
+   Firestore helpers
+   ================================================================ */
+async function loadGhConfig() {
+  const snap = await getDoc(doc(db, 'hmaConfig', 'main'));
+  return snap.exists() ? snap.data() : null;
+}
+async function saveGhConfig(cfg) {
+  await setDoc(doc(db, 'hmaConfig', 'main'), cfg);
+}
+async function loadUsers() {
+  const snap = await getDocs(collection(db, 'hmaUsers'));
+  return snap.docs.map(d => d.data());
+}
+async function addUser(email, name, addedBy) {
+  await setDoc(doc(db, 'hmaUsers', email), { email, name: name || '', addedBy, addedAt: serverTimestamp() });
+}
+async function removeUser(email) {
+  await deleteDoc(doc(db, 'hmaUsers', email));
+}
+async function isUserAllowed(email) {
+  const snap = await getDoc(doc(db, 'hmaUsers', email));
+  return snap.exists();
+}
+async function userCount() {
+  const snap = await getDocs(collection(db, 'hmaUsers'));
+  return snap.size;
+}
+
+/* ================================================================
+   GitHub API helpers
+   ================================================================ */
+async function ghFetch(path, opts) {
+  const url = 'https://api.github.com/repos/' + GH.owner + '/' + GH.repo + path;
+  const r = await fetch(url, {
+    ...opts,
+    headers: Object.assign({
+      'Authorization': 'Bearer ' + GH.token,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    }, (opts && opts.headers) || {})
+  });
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || r.statusText); }
+  return r.json();
+}
+async function ghLoad() {
+  const d = await ghFetch('/contents/content.json?ref=' + GH.branch);
+  GH.sha = d.sha;
+  return JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g, '')))));
+}
+async function ghSave(content) {
+  const str     = JSON.stringify(content, null, 2);
+  const encoded = btoa(unescape(encodeURIComponent(str)));
+  const d = await ghFetch('/contents/content.json', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'Update content via HMA admin', content: encoded, sha: GH.sha, branch: GH.branch })
+  });
+  GH.sha = d.content.sha;
+}
+
+/* ================================================================
+   Auth flow
+   ================================================================ */
+document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('googleSignInBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Signing in…';
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+    // onAuthStateChanged handles the rest
+  } catch (e) {
+    showSigninError(e.code === 'auth/popup-closed-by-user' ? 'Sign-in cancelled.' : e.message);
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/></svg> Sign in with Google';
+  }
+});
+
+document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    currentUser = null;
+    show('signinScreen'); hide('editorMain'); hide('setupScreen');
+    setStatus('Not signed in', '');
+    document.getElementById('saveBtn').disabled = true;
+    document.getElementById('signOutBtn').hidden = true;
+    document.getElementById('previewLink').hidden = true;
+    return;
+  }
+  currentUser = user;
+  document.getElementById('signOutBtn').hidden = false;
+  setStatus(user.email, '');
+
+  try {
+    // Bootstrap: if no users exist yet, make the first Google user an admin
+    const count = await userCount();
+    if (count === 0) {
+      await addUser(user.email, user.displayName || '', 'bootstrap');
+    }
+
+    const allowed = await isUserAllowed(user.email);
+    if (!allowed) {
+      showSigninError('Your account (' + user.email + ') is not authorised. Ask an existing admin to add you.');
+      show('signinScreen'); hide('editorMain'); hide('setupScreen');
+      return;
+    }
+
+    // Load GitHub config
+    const cfg = await loadGhConfig();
+    if (!cfg || !cfg.githubToken) {
+      // First-time setup: no GitHub config yet
+      show('setupScreen'); hide('signinScreen'); hide('editorMain');
+      return;
+    }
+
+    await initEditor(cfg);
+  } catch (e) {
+    showSigninError('Error: ' + e.message);
+    show('signinScreen');
+  }
+});
+
+async function initEditor(cfg) {
+  const parts = cfg.githubOwner.split('/');
+  GH.owner  = cfg.githubOwner.includes('/') ? cfg.githubOwner.split('/')[0] : cfg.githubOwner;
+  GH.repo   = cfg.githubRepo;
+  GH.branch = cfg.githubBranch || 'main';
+  GH.token  = cfg.githubToken;
+
+  try {
+    const content = await ghLoad();
+    setStatus(currentUser.email + ' · Connected', 'ok');
+    document.getElementById('saveBtn').disabled = false;
+
+    const pl = document.getElementById('previewLink');
+    pl.href = 'https://' + GH.owner.toLowerCase() + '.github.io/' + GH.repo + '/';
+    pl.hidden = false;
+
+    hide('signinScreen'); hide('setupScreen');
+    show('editorMain');
+    buildEditor(content);
+    notify('Loaded. Edit any section, then Save to GitHub.', 'info');
+  } catch (e) {
+    showSigninError('GitHub error: ' + e.message + '. Check the token in Setup.');
+    show('setupScreen'); hide('signinScreen');
+  }
+}
+
+/* ---- One-time setup ---- */
+document.getElementById('setupSaveBtn').addEventListener('click', async () => {
+  const repo   = document.getElementById('setupRepo').value.trim();
+  const branch = document.getElementById('setupBranch').value.trim() || 'main';
+  const token  = document.getElementById('setupToken').value.trim();
+  const parts  = repo.split('/');
+
+  if (parts.length !== 2) { showSetupError('Enter repo as owner/name'); return; }
+  if (!token) { showSetupError('Enter the GitHub token'); return; }
+
+  const btn = document.getElementById('setupSaveBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving…';
+
+  try {
+    const cfg = { githubOwner: parts[0], githubRepo: parts[1], githubBranch: branch, githubToken: token };
+    await saveGhConfig(cfg);
+    await initEditor(cfg);
+  } catch (e) {
+    showSetupError(e.message);
+    btn.disabled = false; btn.textContent = 'Save & Connect';
+  }
+});
+
+/* ================================================================
+   Schema
+   ================================================================ */
+const SCHEMA = [
+  { id:'_users', label:'Users', special:'users' },
+  { id:'_settings', label:'GitHub Settings', special:'settings' },
+  { id:'nav', label:'Nav & Brand', fields:[
+    { key:'wordmarkShort', label:'Wordmark (short)', type:'text' },
+    { key:'wordmarkFull',  label:'Wordmark (full text)', type:'text' }
+  ]},
+  { id:'hero', label:'Hero', fields:[
+    { key:'kicker',     label:'Kicker (small label above title)', type:'text' },
+    { key:'title',      label:'Title (main heading)', type:'text' },
+    { key:'lede',       label:'Lede (opening paragraph)', type:'textarea' },
+    { key:'ctaPrimary', label:'Primary button', type:'text' },
+    { key:'ctaGhost',   label:'Secondary button', type:'text' }
+  ]},
+  { id:'forWhom', label:'For Whom', fields:[
+    { key:'lead', label:'Lead paragraph', type:'textarea' },
+    { key:'tags', label:'Audience tags — one per line', type:'list' }
+  ]},
+  { id:'advisory', label:'01 · The Advisory', fields:[
+    { key:'kicker',    label:'Kicker', type:'text' },
+    { key:'title',     label:'Title', type:'text' },
+    { key:'p1',        label:'Paragraph 1', type:'textarea' },
+    { key:'p2',        label:'Paragraph 2', type:'textarea' },
+    { key:'pullQuote', label:'Pull quote', type:'textarea' },
+    { key:'p3',        label:'Paragraph 3', type:'textarea' }
+  ]},
+  { id:'different', label:'02 · Why it is different', fields:[
+    { key:'kicker', label:'Kicker', type:'text' },
+    { key:'title',  label:'Title', type:'text' },
+    { key:'lead',   label:'Main paragraph', type:'textarea' },
+    { key:'note',   label:'Closing note (italic)', type:'textarea' }
+  ]},
+  { id:'approach', label:'03 · The Approach', fields:[
+    { key:'kicker',    label:'Kicker', type:'text' },
+    { key:'title',     label:'Title', type:'text' },
+    { key:'stats',     label:'Statistics', type:'stats', hint:'Each stat shows a large number and a short label beneath it.' },
+    { key:'p1', label:'Paragraph 1', type:'textarea' },
+    { key:'p2', label:'Paragraph 2', type:'textarea' },
+    { key:'p3', label:'Paragraph 3', type:'textarea' },
+    { key:'pullQuote', label:'Pull quote', type:'textarea' },
+    { key:'p4', label:'Paragraph 4', type:'textarea' }
+  ]},
+  { id:'structure', label:'04 · The 28-Day Advisory', fields:[
+    { key:'kicker', label:'Kicker', type:'text' },
+    { key:'title',  label:'Title', type:'text' },
+    { key:'rows',   label:'Structure rows', type:'rows', hint:'Each row: a large number, heading, and short description.' },
+    { key:'note',   label:'Closing note (italic)', type:'textarea' }
+  ]},
+  { id:'receive', label:'05 · What You Receive', fields:[
+    { key:'kicker', label:'Kicker', type:'text' },
+    { key:'title',  label:'Title', type:'text' },
+    { key:'cards',  label:'Cards', type:'cards', hint:'Each card: heading and short description.' }
+  ]},
+  { id:'experience', label:'06 · The Experience', fields:[
+    { key:'kicker', label:'Kicker', type:'text' },
+    { key:'words',  label:'Large display words', type:'text' },
+    { key:'text',   label:'Description paragraph', type:'textarea' }
+  ]},
+  { id:'programme', label:'07 · The Online Programme', fields:[
+    { key:'kicker', label:'Kicker', type:'text' },
+    { key:'title',  label:'Title', type:'text' },
+    { key:'text',   label:'Description paragraph', type:'textarea' },
+    { key:'items',  label:'Programme items — one per line', type:'list' }
+  ]},
+  { id:'about', label:'08 · About Ariana', fields:[
+    { key:'kicker',    label:'Kicker', type:'text' },
+    { key:'title',     label:'Title', type:'text' },
+    { key:'p1',        label:'Paragraph 1', type:'textarea' },
+    { key:'pullQuote', label:'Pull quote', type:'textarea' },
+    { key:'p2',        label:'Paragraph 2', type:'textarea' }
+  ]},
+  { id:'investment', label:'09 · Investment', fields:[
+    { key:'kicker', label:'Kicker', type:'text' },
+    { key:'title',  label:'Title', type:'text' },
+    { key:'p1',     label:'Main paragraph', type:'textarea' },
+    { key:'p2',     label:'Second paragraph (smaller)', type:'textarea' }
+  ]},
+  { id:'apply', label:'10 · Apply', fields:[
+    { key:'kicker',      label:'Kicker', type:'text' },
+    { key:'title',       label:'Title', type:'text' },
+    { key:'submitLabel', label:'Submit button label', type:'text' },
+    { key:'note',        label:'Note below button', type:'textarea' }
+  ]},
+  { id:'footer', label:'Footer', fields:[
+    { key:'tagline', label:'Tagline', type:'text' }
+  ]},
+  { id:'theme', label:'Design & Colours', fields:[
+    { key:'accent',      label:'Accent colour (gold)',        type:'color' },
+    { key:'accentInk',   label:'Accent ink (darker)',         type:'color' },
+    { key:'onAccent',    label:'Text on accent button',       type:'color' },
+    { key:'bg',          label:'Page background',             type:'color' },
+    { key:'bg2',         label:'Section contrast bg',         type:'color' },
+    { key:'surface',     label:'Card / surface background',   type:'color' },
+    { key:'ink',         label:'Primary text colour',         type:'color' },
+    { key:'inkSoft',     label:'Muted text colour',           type:'color' },
+    { key:'line',        label:'Border / line colour',        type:'color' },
+    { key:'__divider',   label:'', type:'divider' },
+    { key:'fontDisplay', label:'Display font (Google Fonts name)', type:'text', placeholder:'Cormorant Garamond' },
+    { key:'fontBody',    label:'Body font (Google Fonts name)',    type:'text', placeholder:'Inter' },
+    { key:'__fontnote',  label:'', type:'fontnote' }
+  ]}
+];
+
+/* ================================================================
+   Build editor
+   ================================================================ */
+let currentContent = null;
+
+function buildEditor(content) {
+  currentContent = content;
+  const el = document.getElementById('editor');
+  el.innerHTML = '';
+  SCHEMA.forEach(section => {
+    el.appendChild(section.special ? buildSpecialCard(section) : buildContentCard(section, content));
+  });
+  loadUsersSection();
+  loadSettingsSection();
+  initColorPickers();
+}
+
+function buildSpecialCard(section) {
+  const card = document.createElement('div');
+  card.className = 'section-card';
+  card.dataset.special = section.special;
+  card.innerHTML =
+    '<div class="section-card__hd" onclick="this.parentElement.classList.toggle(\'open\')">' +
+      '<span class="section-card__label">' + ea(section.label) + '</span>' +
+      '<span class="section-card__arrow">▼</span>' +
+    '</div>' +
+    '<div class="section-card__body" id="special_' + section.special + '">Loading…</div>';
+  return card;
+}
+
+function buildContentCard(section, content) {
+  const card = document.createElement('div');
+  card.className = 'section-card';
+  card.dataset.sid = section.id;
+  card.innerHTML =
+    '<div class="section-card__hd" onclick="this.parentElement.classList.toggle(\'open\')">' +
+      '<span class="section-card__label">' + ea(section.label) + '</span>' +
+      '<span class="section-card__arrow">▼</span>' +
+    '</div>' +
+    '<div class="section-card__body"></div>';
+
+  const body = card.querySelector('.section-card__body');
+  const sData = content[section.id] || {};
+  section.fields.forEach(f => body.appendChild(buildField(section.id, f, sData[f.key])));
+  return card;
+}
+
+/* ---- Users section ---- */
+async function loadUsersSection() {
+  const el = document.getElementById('special_users');
+  if (!el) return;
+  try {
+    const users = await loadUsers();
+    el.innerHTML =
+      '<div class="users-list" id="usersList"></div>' +
+      '<div class="users-add">' +
+        '<input id="newUserEmail" type="email" placeholder="editor@email.com" />' +
+        '<button class="btn btn-primary" id="addUserBtn">Add editor</button>' +
+      '</div>' +
+      '<div id="usersNotif" style="margin-top:.6rem" hidden></div>';
+
+    renderUserList(users);
+
+    document.getElementById('addUserBtn').addEventListener('click', async () => {
+      const emailVal = document.getElementById('newUserEmail').value.trim().toLowerCase();
+      if (!emailVal || !emailVal.includes('@')) { usersNotif('Enter a valid email.', 'error'); return; }
+      try {
+        await addUser(emailVal, '', currentUser.email);
+        document.getElementById('newUserEmail').value = '';
+        const updated = await loadUsers();
+        renderUserList(updated);
+        usersNotif(emailVal + ' added.', 'success');
+      } catch(e) { usersNotif(e.message, 'error'); }
+    });
+  } catch(e) {
+    el.innerHTML = '<p style="color:var(--danger);font-size:12px">Could not load users: ' + e.message + '</p>';
+  }
+}
+
+function renderUserList(users) {
+  const el = document.getElementById('usersList');
+  if (!el) return;
+  if (!users.length) { el.innerHTML = '<p style="color:var(--muted);font-size:12px;margin-bottom:.6rem">No users yet.</p>'; return; }
+  el.innerHTML = users.map(u =>
+    '<div class="user-row">' +
+      '<div class="user-row__info">' +
+        '<div class="user-avatar">' + (u.email || '?')[0].toUpperCase() + '</div>' +
+        '<span class="user-email">' + ea(u.email) + '</span>' +
+        (u.email === currentUser.email ? ' <span class="user-you">You</span>' : '') +
+      '</div>' +
+      (u.email !== currentUser.email
+        ? '<button class="btn btn-danger btn-sm" data-remove-user="' + ea(u.email) + '">Remove</button>'
+        : '<span style="font-size:11px;color:var(--dim)">Can\'t remove yourself</span>') +
+    '</div>'
+  ).join('');
+
+  el.querySelectorAll('[data-remove-user]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.getAttribute('data-remove-user');
+      if (!confirm('Remove ' + email + '?')) return;
+      try {
+        await removeUser(email);
+        const updated = await loadUsers();
+        renderUserList(updated);
+        usersNotif(email + ' removed.', 'success');
+      } catch(e) { usersNotif(e.message, 'error'); }
+    });
+  });
+}
+
+function usersNotif(msg, type) {
+  const el = document.getElementById('usersNotif');
+  if (!el) return;
+  el.className = 'notice notice-' + type;
+  el.textContent = msg;
+  el.hidden = false;
+  if (type !== 'error') setTimeout(() => { el.hidden = true; }, 4000);
+}
+
+/* ---- Settings section ---- */
+async function loadSettingsSection() {
+  const el = document.getElementById('special_settings');
+  if (!el) return;
+  const cfg = await loadGhConfig().catch(() => ({}));
+  el.innerHTML =
+    '<div class="settings-grid">' +
+      '<div class="field"><label>Owner</label><input id="cfgOwner" type="text" value="' + ea(cfg.githubOwner||'') + '" /></div>' +
+      '<div class="field"><label>Repository name</label><input id="cfgRepo" type="text" value="' + ea(cfg.githubRepo||'') + '" /></div>' +
+      '<div class="field"><label>Branch</label><input id="cfgBranch" type="text" value="' + ea(cfg.githubBranch||'main') + '" /></div>' +
+      '<div class="field"><label>GitHub Token</label><input id="cfgToken" type="password" value="' + ea(cfg.githubToken||'') + '" autocomplete="off" /></div>' +
+    '</div>' +
+    '<button class="btn btn-ghost" id="saveSettingsBtn" style="margin-top:.8rem">Save settings</button>' +
+    '<div id="settingsNotif" style="margin-top:.6rem" hidden></div>';
+
+  document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+    const newCfg = {
+      githubOwner: document.getElementById('cfgOwner').value.trim(),
+      githubRepo:  document.getElementById('cfgRepo').value.trim(),
+      githubBranch:document.getElementById('cfgBranch').value.trim() || 'main',
+      githubToken: document.getElementById('cfgToken').value.trim()
+    };
+    if (!newCfg.githubOwner || !newCfg.githubRepo || !newCfg.githubToken) {
+      settingsNotif('Fill in all fields.', 'error'); return;
+    }
+    try {
+      await saveGhConfig(newCfg);
+      GH.owner = newCfg.githubOwner; GH.repo = newCfg.githubRepo;
+      GH.branch = newCfg.githubBranch; GH.token = newCfg.githubToken;
+      settingsNotif('Settings saved.', 'success');
+    } catch(e) { settingsNotif(e.message, 'error'); }
+  });
+}
+function settingsNotif(msg, type) {
+  const el = document.getElementById('settingsNotif');
+  if (!el) return;
+  el.className = 'notice notice-' + type;
+  el.textContent = msg;
+  el.hidden = false;
+  if (type !== 'error') setTimeout(() => { el.hidden = true; }, 4000);
+}
+
+/* ================================================================
+   Field builders
+   ================================================================ */
+function buildField(sid, f, val) {
+  const wrap = document.createElement('div');
+  wrap.className = 'field'; wrap.dataset.sid = sid; wrap.dataset.fkey = f.key; wrap.dataset.ftype = f.type;
+
+  if (f.type === 'divider') { wrap.innerHTML = '<hr class="theme-divider">'; return wrap; }
+  if (f.type === 'fontnote') { wrap.innerHTML = '<p class="theme-note">Font changes take effect immediately. To add a new font, also update the Google Fonts &lt;link&gt; in index.html.</p>'; return wrap; }
+
+  const lbl = '<label>' + ea(f.label) + '</label>';
+  if (f.type === 'text') {
+    wrap.innerHTML = lbl + '<input type="text" value="' + ea(val||'') + '" placeholder="' + ea(f.placeholder||'') + '" data-inp />';
+  } else if (f.type === 'textarea') {
+    wrap.innerHTML = lbl + '<textarea rows="3" data-inp>' + et(val||'') + '</textarea>';
+  } else if (f.type === 'list') {
+    const lines = Array.isArray(val) ? val.join('\n') : (val||'');
+    wrap.innerHTML = lbl + '<textarea rows="' + Math.max(3, lines.split('\n').length+1) + '" data-inp>' + et(lines) + '</textarea>';
+  } else if (f.type === 'color') {
+    const hex = val||'#000000';
+    wrap.innerHTML = lbl + '<div class="color-row"><input type="color" value="' + ea(hex) + '" data-cpick /><input type="text" value="' + ea(hex) + '" maxlength="7" data-inp /></div>';
+  } else if (f.type === 'stats') {
+    const items = Array.isArray(val) ? val : [];
+    wrap.innerHTML = lbl + (f.hint ? '<div class="array-hint">'+ea(f.hint)+'</div>' : '') +
+      '<div class="array-wrap" data-atype="stats">' + items.map(statItem).join('') + '</div>' +
+      '<button class="btn btn-ghost btn-sm array-add" data-add-type="stats">+ Add stat</button>';
+  } else if (f.type === 'rows') {
+    const items = Array.isArray(val) ? val : [];
+    wrap.innerHTML = lbl + (f.hint ? '<div class="array-hint">'+ea(f.hint)+'</div>' : '') +
+      '<div class="array-wrap" data-atype="rows">' + items.map(rowItem).join('') + '</div>' +
+      '<button class="btn btn-ghost btn-sm array-add" data-add-type="rows">+ Add row</button>';
+  } else if (f.type === 'cards') {
+    const items = Array.isArray(val) ? val : [];
+    wrap.innerHTML = lbl + (f.hint ? '<div class="array-hint">'+ea(f.hint)+'</div>' : '') +
+      '<div class="array-wrap" data-atype="cards">' + items.map(cardItem).join('') + '</div>' +
+      '<button class="btn btn-ghost btn-sm array-add" data-add-type="cards">+ Add card</button>';
+  }
+  return wrap;
+}
+
+function statItem(item) {
+  return '<div class="array-item array-item--stat"><div class="field-row"><div class="field"><label>Number</label><input type="text" value="'+ea(item.n||'')+'" data-sn /></div><div class="field"><label>Label</label><input type="text" value="'+ea(item.label||'')+'" data-sl /></div></div><button class="btn btn-danger btn-sm" data-remove-item title="Remove">✕</button></div>';
+}
+function rowItem(item) {
+  return '<div class="array-item array-item--row"><div class="field-row-3"><div class="field"><label>No.</label><input type="text" value="'+ea(item.n||'')+'" data-rn /></div><div class="field"><label>Heading</label><input type="text" value="'+ea(item.heading||'')+'" data-rh /></div><div class="field"><label>Description</label><input type="text" value="'+ea(item.text||'')+'" data-rt /></div></div><button class="btn btn-danger btn-sm" data-remove-item title="Remove">✕</button></div>';
+}
+function cardItem(item) {
+  return '<div class="array-item array-item--card"><div><div class="field"><label>Heading</label><input type="text" value="'+ea(item.heading||'')+'" data-ch /></div><div class="field"><label>Description</label><textarea rows="2" data-ct>'+et(item.text||'')+'</textarea></div></div><button class="btn btn-danger btn-sm" data-remove-item title="Remove">✕</button></div>';
+}
+
+/* Event delegation for array add/remove */
+document.getElementById('editor').addEventListener('click', e => {
+  if (e.target.matches('[data-remove-item]')) {
+    e.target.closest('.array-item').remove();
+  }
+  if (e.target.matches('[data-add-type]')) {
+    const type = e.target.getAttribute('data-add-type');
+    const wrap = e.target.previousElementSibling;
+    if (type === 'stats') wrap.insertAdjacentHTML('beforeend', statItem({n:'',label:''}));
+    else if (type === 'rows')  wrap.insertAdjacentHTML('beforeend', rowItem({n:'',heading:'',text:''}));
+    else if (type === 'cards') wrap.insertAdjacentHTML('beforeend', cardItem({heading:'',text:''}));
+    initColorPickers();
+  }
+});
+
+function initColorPickers() {
+  document.querySelectorAll('.color-row').forEach(row => {
+    const pick = row.querySelector('[data-cpick]');
+    const text = row.querySelector('[data-inp]');
+    if (!pick || !text || pick._bound) return;
+    pick._bound = true;
+    pick.addEventListener('input', () => { text.value = pick.value; });
+    text.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(text.value)) pick.value = text.value; });
+  });
+}
+
+/* ================================================================
+   Read form → content
+   ================================================================ */
+function readForm() {
+  const content = JSON.parse(JSON.stringify(currentContent || {}));
+  document.querySelectorAll('.section-card[data-sid]').forEach(card => {
+    const sid = card.dataset.sid;
+    if (!content[sid]) content[sid] = {};
+    card.querySelectorAll('.field[data-fkey]').forEach(fw => {
+      const key = fw.dataset.fkey; const type = fw.dataset.ftype;
+      if (type === 'divider' || type === 'fontnote') return;
+      if (['text','textarea','color'].includes(type)) {
+        const inp = fw.querySelector('[data-inp]');
+        if (inp) content[sid][key] = inp.value.trim();
+      } else if (type === 'list') {
+        const inp = fw.querySelector('[data-inp]');
+        if (inp) content[sid][key] = inp.value.split('\n').map(l => l.trim()).filter(Boolean);
+      } else if (type === 'stats') {
+        content[sid][key] = [...fw.querySelectorAll('.array-item')].map(item => ({ n: v(item,'[data-sn]'), label: v(item,'[data-sl]') }));
+      } else if (type === 'rows') {
+        content[sid][key] = [...fw.querySelectorAll('.array-item')].map(item => ({ n: v(item,'[data-rn]'), heading: v(item,'[data-rh]'), text: v(item,'[data-rt]') }));
+      } else if (type === 'cards') {
+        content[sid][key] = [...fw.querySelectorAll('.array-item')].map(item => ({ heading: v(item,'[data-ch]'), text: vt(item,'[data-ct]') }));
+      }
+    });
+  });
+  return content;
+}
+function v(p,s)  { const el = p.querySelector(s); return el ? el.value.trim() : ''; }
+function vt(p,s) { const el = p.querySelector(s); return el ? el.value : ''; }
+
+/* ================================================================
+   Save
+   ================================================================ */
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving…';
+  try {
+    const content = readForm();
+    await ghSave(content);
+    currentContent = content;
+    setStatus(currentUser.email + ' · Saved ✓', 'ok');
+    notify('Saved to GitHub. The site updates in ~30 seconds.', 'success');
+    setTimeout(() => setStatus(currentUser.email + ' · Connected', 'ok'), 3500);
+  } catch(e) {
+    notify('Save failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save to GitHub';
+  }
+});
+
+/* ================================================================
+   Helpers
+   ================================================================ */
+function ea(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function et(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function show(id) { document.getElementById(id).hidden = false; }
+function hide(id) { document.getElementById(id).hidden = true; }
+function setStatus(msg, cls) { const el = document.getElementById('connStatus'); el.textContent = msg; el.className = cls||''; }
+function notify(msg, type) {
+  const el = document.getElementById('notif');
+  el.className = 'notice notice-'+(type||'info'); el.textContent = msg; el.hidden = false;
+  if (type !== 'error') setTimeout(() => { el.hidden = true; }, 5000);
+}
+function showSigninError(msg) {
+  const el = document.getElementById('signinError');
+  el.textContent = msg; el.hidden = false;
+}
+function showSetupError(msg) {
+  const el = document.getElementById('setupError');
+  el.textContent = msg; el.hidden = false;
+}
+</script>
+</body>
+</html>
