@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "wordmarkShort": "HMA",
+    "wordmarkFull": "The Human Mastery Architecture"
+  },
+  "hero": {
+    "kicker": "Private advisory · 28 days",
+    "title": "The Human Mastery Architecture",
+    "lede": "A private, highly personalised advisory for founders, CEOs, executives and high-performing leaders who choose to intentionally architect the areas of life and leadership that matter most.",
+    "ctaPrimary": "Begin a private conversation",
+    "ctaGhost": "Understand the advisory"
+  },
+  "forWhom": {
+    "lead": "For the leader who is already intentional about how they lead, grow and shape their life — and wants a private space to continue that journey with greater clarity, perspective and purpose.",
+    "tags": ["Founders", "CEOs", "Executives", "High-performing leaders"]
+  },
+  "advisory": {
+    "kicker": "The Advisory",
+    "title": "A private space for the work that matters most.",
+    "p1": "Over 28 days, we bring intention to the areas that shape life beyond professional success — your decisions, relationships, wellbeing, leadership and future direction.",
+    "p2": "Together, we create the space to understand where you are, what truly matters now, what may be getting in the way, and what you want to intentionally build next.",
+    "pullQuote": "There is nothing to \"fix.\" You already hold the experience, intelligence and capacity.",
+    "p3": "My role is to bring perspective, thoughtful challenge, structure and a trusted space for clear thinking — so your decisions translate into action and impact your life at the highest level. Our conversations create clarity and a clear map ahead. Your intentional actions create momentum toward the life and goals you envision."
+  },
+  "different": {
+    "kicker": "Why it is different",
+    "title": "Not therapy. Not coaching. Not consulting.",
+    "lead": "HMA is not therapy, generic coaching or corporate consulting. The Architect already possesses experience, intelligence and capacity. The work creates a private environment for meaningful conversations, thoughtful challenge, deeper understanding, stronger decisions and intentional action.",
+    "note": "The Architect retains complete ownership of their decisions and direction."
+  },
+  "approach": {
+    "kicker": "The Approach",
+    "title": "The depth behind the work.",
+    "stats": [
+      { "n": "13+",     "label": "years of dedicated study & practice" },
+      { "n": "15,000+", "label": "hours of research & application" },
+      { "n": "2,000+",  "label": "pages of written research" },
+      { "n": "4",       "label": "regions — Europe, UK, USA, UAE" }
+    ],
+    "p1": "HMA is the result of 13+ years of study, research and real-world application, with 15,000+ hours invested in understanding human behaviour and performance and more than 2,000 pages of documented work.",
+    "p2": "More importantly, that knowledge has been tested in real conversations and real lives — through work with 200+ people, founders, CEOs and senior leaders across Europe, the UK, USA and UAE.",
+    "p3": "The work has touched the realities behind achievement: difficult decisions, leadership pressure, relationships, health, identity, purpose, performance and the personal patterns that quietly influence how we live.",
+    "pullQuote": "The purpose is application. To recognise what carries weight, question what deserves reconsideration, and make choices with greater discernment.",
+    "p4": "The outcome is not a prescribed version of success, but a life increasingly shaped by conscious choice — in leadership, relationships, wellbeing, contribution and the way you choose to live."
+  },
+  "structure": {
+    "kicker": "The Architect Experience",
+    "title": "The 28-day advisory.",
+    "rows": [
+      { "n": "8",  "heading": "Private advisory sessions",   "text": "90 minutes each, shaped entirely around the Architect." },
+      { "n": "2",  "heading": "Conversations each week",     "text": "A deliberate rhythm of reflection, challenge and progress." },
+      { "n": "∞",  "heading": "Direct access between sessions", "text": "Via WhatsApp, text and email throughout the engagement." }
+    ],
+    "note": "We focus on what has real consequence — the decisions ahead, the pressures you are carrying, where your time and energy are going, and what needs your attention now."
+  },
+  "receive": {
+    "kicker": "What the Architect receives",
+    "title": "Clarity, made tangible.",
+    "cards": [
+      { "heading": "Personal Architecture",        "text": "A clear overview of priorities, goals and key areas of focus for the 28 days." },
+      { "heading": "Weekly Progress Reviews",      "text": "Tracking decisions, intentional actions and measurable progress." },
+      { "heading": "Final Architecture & 90-Day Plan", "text": "Key decisions, outcomes and priorities brought into a clear strategic plan for the 90 days ahead." },
+      { "heading": "Direct Advisory Access",       "text": "Trusted support between sessions throughout the engagement." }
+    ]
+  },
+  "experience": {
+    "kicker": "The Experience",
+    "words": "Private. Personal. Intelligent. Human. Premium.",
+    "text": "For leaders whose decisions carry consequence — across business, relationships, health and the life you are building beyond your role within your company, corporate or boardroom."
+  },
+  "programme": {
+    "kicker": "The Online Programme",
+    "title": "A separate, private Architect experience.",
+    "text": "Beyond the conversations, each Architect is given access to a private digital experience — a considered space that holds the work of the 28 days and the structure that carries it forward.",
+    "items": [
+      "Architect onboarding",
+      "Personal assessment",
+      "Personal Architecture",
+      "Private programme content",
+      "Guided exercises & intentional actions",
+      "Reflection & review",
+      "Progress tracking",
+      "Weekly structure",
+      "Final Architecture",
+      "90-day strategic direction"
+    ]
+  },
+  "about": {
+    "kicker": "About Ariana",
+    "title": "The Architect behind the work.",
+    "p1": "For more than 13 years, I have studied this work, written about it, tested it in real life and brought it into conversations with over 200 people — from founders and CEOs to senior leaders and individuals navigating important moments in their lives. Across different countries, cultures and levels of success, one thing has remained constant: the human being behind it all.",
+    "pullQuote": "HMA is where years of study, research and real-world human experience come together — and are applied to the person sitting in front of me.",
+    "p2": "I look forward to exploring the world of new beginnings and opportunities that you are aiming to create for yourself and your dearest ones."
+  },
+  "investment": {
+    "kicker": "Investment",
+    "title": "A private engagement, by application.",
+    "p1": "The Human Mastery Architecture is a limited, highly personalised engagement. The investment reflects the depth, privacy and dedicated attention each Architect receives, and is shared directly within a private conversation.",
+    "p2": "Details of the investment are discussed once we have established that the advisory is the right fit for what you are seeking to build."
+  },
+  "apply": {
+    "kicker": "Apply · Begin",
+    "title": "Begin with a private conversation.",
+    "submitLabel": "Send enquiry",
+    "note": "Share what is bringing you here. What feels most important for you to create right now? Begin from that place — I am right here."
+  },
+  "footer": {
+    "tagline": "Private advisory for founders & leaders · Europe · UK · USA · UAE"
+  },
+  "theme": {
+    "accent":    "#9a7b43",
+    "accentInk": "#7c6233",
+    "onAccent":  "#fbf8f2",
+    "bg":        "#f6f1e9",
+    "bg2":       "#efe7da",
+    "surface":   "#fbf8f2",
+    "ink":       "#211d18",
+    "inkSoft":   "#5b5248",
+    "line":      "#ddd2c0",
+    "fontDisplay": "Cormorant Garamond",
+    "fontBody":    "Inter"
+  }
+}
