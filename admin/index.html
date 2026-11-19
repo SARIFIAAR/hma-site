@@ -338,15 +338,9 @@ onAuthStateChanged(auth, async (user) => {
   setStatus(user.email, '');
 
   try {
-    // Bootstrap: if no users exist yet, make the first Google user an admin
-    const count = await userCount();
-    if (count === 0) {
-      await addUser(user.email, user.displayName || '', 'bootstrap');
-    }
-
     const allowed = await isUserAllowed(user.email);
     if (!allowed) {
-      showSigninError('Your account (' + user.email + ') is not authorised. Ask an existing admin to add you.');
+      showSigninError('Your account (' + user.email + ') is not authorised. Add this email to the hmaUsers collection in Firestore, then sign in again.');
       show('signinScreen'); hide('editorMain'); hide('setupScreen');
       return;
     }
